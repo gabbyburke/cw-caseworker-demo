@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Child Welfare Management System">
+    <title>Child Welfare Case Management</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header Area -->
+    <header class="header">
+        <div class="header__logo">
+            <img src="logo.png" alt="Child Welfare Logo" width="40" height="40">
+        </div>
+        <div class="header__search">
+            <form role="search" class="search-form">
+                <label for="global-search" class="visually-hidden">Search cases</label>
+                <input type="search" 
+                       id="global-search" 
+                       class="search-form__input js-search-input"
+                       placeholder="Search cases..."
+                       autocomplete="off">
+                <i class="material-icons search-form__icon">search</i>
+            </form>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+        <!-- Left Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+            <ul class="nav-list">
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link nav-list__link--active" aria-label="Dashboard">
+                        <i class="material-icons">dashboard</i>
+                    </a>
+                </li>
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link" aria-label="Cases">
+                        <i class="material-icons">folder</i>
+                    </a>
+                </li>
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link" aria-label="New Case">
+                        <i class="material-icons">add_circle</i>
+                    </a>
+                </li>
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link" aria-label="Reports">
+                        <i class="material-icons">assessment</i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="case-container" role="main">
+            <!-- Case Summary Section -->
+            <section class="case-summary">
+                <header class="case-summary__header">
+                    <h1 class="case-summary__title">Case #CW-12345</h1>
+                    <div class="case-summary__status">Active</div>
+                </header>
+                
+                <div class="case-summary__content">
+                    <div class="family-info card">
+                        <h2 class="card__title">
+                            <i class="material-icons">family_restroom</i>
+                            Family Information
+                        </h2>
+                        <dl class="family-info__list">
+                            <dt>Primary Caregiver:</dt>
+                            <dd>Jane Doe</dd>
+                            <dt>Children:</dt>
+                            <dd>John Doe (8), Sarah Doe (6)</dd>
+                            <dt>Case Type:</dt>
+                            <dd>Neglect</dd>
+                        </dl>
+                    </div>
+
+                    <div class="risk-assessment card">
+                        <h2 class="card__title">
+                            <i class="material-icons">warning</i>
+                            Risk Assessment
+                        </h2>
+                        <p class="risk-assessment__level">
+                            Current Risk Level: <span class="risk-level risk-level--medium">Medium</span>
+                        </p>
+                        <p class="risk-assessment__details">
+                            Last assessment conducted on 2023-06-15. Scheduled for re-evaluation in 30 days.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Case Notes Section -->
+            <section class="case-notes">
+                <h2 class="case-notes__title">
+                    <i class="material-icons">note</i>
+                    Case Notes
+                </h2>
+                <form class="notes-form js-notes-form">
+                    <div class="notes-form__controls">
+                        <button type="button" class="button button--icon js-voice-input" aria-label="Start voice input">
+                            <i class="material-icons">mic</i>
+                        </button>
+                        <span class="notes-form__status js-voice-status">Click to start voice input</span>
+                    </div>
+                    <label for="case-notes-input" class="visually-hidden">Enter case notes</label>
+                    <textarea id="case-notes-input" 
+                              class="notes-form__input js-notes-input"
+                              placeholder="Enter case notes..."
+                              rows="6"
+                              aria-live="polite"></textarea>
+                    <div class="notes-form__controls">
+                        <span class="notes-form__count js-character-count">0 characters</span>
+                        <button type="submit" class="button button--primary">
+                            <i class="material-icons">save</i> Save Notes
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Previous Case Notes Section -->
+            <section class="previous-notes">
+                <h2 class="previous-notes__title">
+                    <i class="material-icons">history</i>
+                    Previous Case Notes
+                </h2>
+                <ul class="previous-notes__list">
+                    <li class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">2023-06-15</span>
+                            <span class="previous-notes__preview">Home visit conducted. Family showing improvement in...</span>
+                        </a>
+                    </li>
+                    <li class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">2023-06-01</span>
+                            <span class="previous-notes__preview">Follow-up on school attendance. John's teacher reports...</span>
+                        </a>
+                    </li>
+                    <li class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">2023-05-15</span>
+                            <span class="previous-notes__preview">Initial assessment completed. Identified areas of concern...</span>
+                        </a>
+                    </li>
+                </ul>
+                <button class="button button--text">View All Case Notes</button>
+            </section>
+        </main>
+
+        <!-- AI Mentor Sidebar -->
+        <aside class="ai-mentor" role="complementary">
+            <header class="ai-mentor__header">
+                <h2 class="ai-mentor__title">
+                    <i class="material-icons">smart_toy</i>
+                    AI Assistant
+                </h2>
+                <button class="ai-mentor__toggle js-mentor-toggle" 
+                        aria-label="Toggle AI Assistant"
+                        aria-expanded="true">
+                    <i class="material-icons">chevron_right</i>
+                </button>
+            </header>
+
+            <div class="ai-mentor__content js-mentor-content">
+                <div class="chat-window js-chat-window">
+                    <!-- Chat messages will be dynamically inserted here -->
+                </div>
+
+                <form class="chat-form js-chat-form" id="chat-form">
+                    <label for="ai-input" class="visually-hidden">Ask AI Assistant</label>
+                    <input type="text" 
+                           id="ai-input" 
+                           class="chat-form__input"
+                           placeholder="Ask a question..."
+                           autocomplete="off"
+                           required>
+                    <button type="submit" 
+                            class="chat-form__submit" 
+                            id="chat-submit"
+                            aria-label="Send message">
+                        <i class="material-icons">send</i>
+                    </button>
+                </form>
+            </div>
+        </aside>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
