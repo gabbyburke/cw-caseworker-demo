@@ -20,8 +20,15 @@ Under `appserver/` is a Cloud Run-hosted web app that serves the UI and hosts ba
 1. **Run it.** Type `python main.py`.
 
 # Deployment
+
 1. **TBD: set up Cloud Run**
 1. From the `appserver/` directory, type `gcloud run deploy <NAME OF CLOUD RUN INSTANCE> --source .`. (Note the period at the end--that's important.)
 
 # TODO
+
+- [ ] Build out Cloud Run instance.
 - [ ] Write up how to create Cloud Run instance from command line.
+- [X] Build out BigQuery data set and table with seed data.
+- [ ] Write up BQ creating and seeding.
+- [ ] Build out Pub/Sub connecting BQ writes to API.
+- [ ] Add API to summarize a single case note.

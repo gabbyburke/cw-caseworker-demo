@@ -1,16 +1,39 @@
 from flask import Flask, request, Response, jsonify
 from geminisupport import generate_response
+from google.cloud import bigquery
 import json
 import os
 
+bq = bigquery.Client()
 
 app = Flask(__name__,
             static_url_path='', 
             static_folder='site',
             template_folder='')
 
+@app.route("/casenotes/<case_id>")
+def run_casenotes(case_id):
+
+    if case_id.isnumeric():
+        # Perform a query.
+        query = (
+            f"""
+            select case_id, visit_id, visit_date, note from `ignite2025.case_notes.case_notes` as cn
+            where cn.case_id={case_id}
+            order by cn.visit_id desc
+            """)
+        query_job = bq.query(query)  # API request
+        rows = query_job.result()  # Waits for query to finish
+
+        # result = [ {'case_id': r.case_id, 'visit_id': r.visit_id, 'visit_date': r.visit_date, 'note': r.note} for r in rows]
+        result = [dict(row) for row in rows]
+        result = json.dumps(result, default=str)
+        return Response(result, mimetype='application/json')
+    else:
+        return "Invalid case_id", 400
+
 @app.route("/gemini", methods=['POST'])
-def run():
+def run_gemini():
     """HTTP Cloud Function to handle chatbot requests."""
     # Handle health check requests
     if getattr(request, 'path', '') in ['/_ah/warmup', '/health']:

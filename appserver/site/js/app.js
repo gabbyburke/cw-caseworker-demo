@@ -4,7 +4,8 @@ const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('ai-input');
 const submitButton = document.getElementById('chat-submit');
 
-const API_URL = '/gemini';
+const CHATBOT_URL = '/gemini';
+const CASENOTES_URL = '/casenotes/'
 
 // Debug function to check elements
 function debugElements() {
@@ -13,6 +14,56 @@ function debugElements() {
     console.log('chatForm:', chatForm);
     console.log('chatInput:', chatInput);
     console.log('submitButton:', submitButton);
+}
+
+(async () => {
+    handleLoadCaseNotes(12345);
+})();
+
+// load case notes
+async function handleLoadCaseNotes(case_id) {
+    try {
+        const response = await fetch(CASENOTES_URL + case_id, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (data) {
+            for (let row of data) {
+                let summary = row.summary;
+                if (!summary) {
+                    summary = row.note.substring(0, 120) + (row.note.length > 120 ? '...' : '');
+                }
+
+                const element = `
+                    <li id="previous-notes-item-${row.visit_id}" class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">${row.visit_date}</span>
+                            <span class="previous-notes__preview">${summary}</span>
+                        </a>
+                    </li>
+                `;
+
+                $('#previous-notes-list').append($(element));
+            }
+        } else {
+            throw new Error('No response in data');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
 
 // Handle form submission
@@ -41,9 +92,9 @@ async function handleSubmit(event) {
         chatWindow.appendChild(loadingMessage);
 
         try {
-            console.log('Calling cloud function at:', API_URL);
+            console.log('Calling cloud function at:', CHATBOT_URL);
             // Call cloud function
-            const response = await fetch(API_URL, {
+            const response = await fetch(CHATBOT_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

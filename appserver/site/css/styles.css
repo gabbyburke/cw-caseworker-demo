@@ -1,7 +1,9 @@
 /* ==========================================================================
    CSS Reset & Base Styles
    ========================================================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -86,7 +88,12 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
     margin-bottom: var(--spacing-sm);
     font-weight: var(--font-weight-medium);
     line-height: 1.2;
@@ -515,6 +522,7 @@ body {
 .previous-notes__list {
     list-style: none;
     margin-bottom: var(--spacing-md);
+    overflow-y: scroll;
 }
 
 .previous-notes__item {
@@ -669,6 +677,7 @@ body {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -676,10 +685,14 @@ body {
 }
 
 @keyframes loadingDot {
-    0%, 80%, 100% { 
+
+    0%,
+    80%,
+    100% {
         transform: scale(0);
     }
-    40% { 
+
+    40% {
         transform: scale(1);
     }
 }
@@ -759,7 +772,7 @@ body {
     .app-container {
         grid-template-columns: var(--nav-width) 1fr;
     }
-    
+
     .ai-assistant {
         position: fixed;
         right: 0;
@@ -770,7 +783,7 @@ body {
         transition: transform var(--transition-emphasized);
         box-shadow: var(--shadow-3);
     }
-    
+
     .ai-assistant.is-visible {
         transform: translateX(0);
     }
@@ -780,7 +793,7 @@ body {
     .app-container {
         grid-template-columns: 1fr;
     }
-    
+
     .sidebar-nav {
         position: fixed;
         bottom: 0;
@@ -794,24 +807,24 @@ body {
         background-color: var(--color-surface);
         border-top: 1px solid var(--color-border);
     }
-    
+
     .nav-list {
         display: flex;
         justify-content: space-around;
         width: 100%;
         padding: 0 var(--spacing-sm);
     }
-    
+
     .nav-list__item {
         margin: 0;
         padding: var(--spacing-xxs);
     }
-    
+
     .nav-list__link {
         height: 48px;
         width: 48px;
     }
-    
+
     .case-container {
         margin-bottom: 64px;
         padding: var(--spacing-sm);
@@ -821,21 +834,22 @@ body {
 /* Print Styles
    ========================================================================== */
 @media print {
+
     .header,
     .sidebar-nav,
     .ai-assistant {
         display: none;
     }
-    
+
     .app-container {
         display: block;
     }
-    
+
     .case-container {
         height: auto;
         padding: 0;
     }
-    
+
     .card,
     .case-notes,
     .previous-notes {
