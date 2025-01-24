@@ -72,14 +72,22 @@
                             <i class="material-icons">family_restroom</i>
                             Family Information
                         </h2>
-                        <dl class="family-info__list">
-                            <dt>Primary Caregiver:</dt>
-                            <dd>Jane Doe</dd>
-                            <dt>Children:</dt>
-                            <dd>John Doe (8), Sarah Doe (6)</dd>
-                            <dt>Case Type:</dt>
-                            <dd>Neglect</dd>
-                        </dl>
+                        <div class="family-info__list">
+                            <table>
+                                <tr>
+                                    <td><b>Primary Caregiver:</b></td>
+                                    <td>Jane Doe</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Children:</b></td>
+                                    <td>John Doe (8), Sarah Doe (6)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Case Type:</b></td>
+                                    <td>Neglect</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="risk-assessment card">
@@ -142,8 +150,7 @@
         <aside class="ai-mentor" role="complementary">
             <header class="ai-mentor__header">
                 <h2 class="ai-mentor__title">
-                    <i class="material-icons">smart_toy</i>
-                    AI Assistant
+                    <img class="gemini-logo" src="img/gemini.png"><span>AI Assistant</span>
                 </h2>
                 <button class="ai-mentor__toggle js-mentor-toggle" aria-label="Toggle AI Assistant"
                     aria-expanded="true">

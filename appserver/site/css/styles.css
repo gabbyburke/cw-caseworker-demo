@@ -35,7 +35,7 @@
     --font-family-base: 'Roboto', system-ui, -apple-system, sans-serif;
     --font-size-base: 16px;
     --font-size-small: 14px;
-    --font-size-large: 22px;
+    --font-size-large: 18px;
     --font-weight-light: 300;
     --font-weight-regular: 400;
     --font-weight-medium: 500;
@@ -48,7 +48,7 @@
     --spacing-xxs: 4px;
     --spacing-xs: 8px;
     --spacing-sm: 16px;
-    --spacing-md: 24px;
+    --spacing-md: 20px;
     --spacing-lg: 32px;
     --spacing-xl: 48px;
 
@@ -252,7 +252,7 @@ body {
     background-color: var(--color-surface);
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-1);
-    overflow: hidden;
+    /* overflow: hidden; */
     transition: box-shadow var(--transition-base);
 }
 
@@ -264,7 +264,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-md);
+    padding: var(--spacing-xs);
     background-color: var(--color-primary);
     color: var(--color-on-primary);
 }
@@ -289,8 +289,8 @@ body {
 .case-summary__content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
 }
 
 .card {
@@ -362,7 +362,7 @@ body {
 .case-notes {
     background-color: var(--color-surface);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     box-shadow: var(--shadow-1);
     border: 1px solid var(--color-border);
     transition: all var(--transition-base);
@@ -377,7 +377,7 @@ body {
     display: flex;
     align-items: center;
     font-size: var(--font-size-large);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
     color: var(--color-primary);
     letter-spacing: -0.02em;
 }
@@ -388,7 +388,7 @@ body {
 
 .notes-form__input {
     width: 100%;
-    height: 200px;
+    height: 100px;
     padding: var(--spacing-sm);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-lg);
@@ -499,7 +499,7 @@ body {
     box-shadow: var(--shadow-1);
     border: 1px solid var(--color-border);
     transition: all var(--transition-base);
-    height: 35%;
+    height: 25%;
 }
 
 .previous-notes:hover {
@@ -511,7 +511,7 @@ body {
     display: flex;
     align-items: center;
     font-size: var(--font-size-large);
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
     color: var(--color-primary);
     letter-spacing: -0.02em;
 }
@@ -849,6 +849,11 @@ body {
         display: inline-flex;
         vertical-align: top;
     }
+}
+
+.gemini-logo {
+    height: 30px;
+    vertical-align: text-bottom;
 }
 
 /* Print Styles
