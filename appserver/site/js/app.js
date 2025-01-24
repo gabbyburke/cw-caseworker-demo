@@ -21,11 +21,8 @@ function debugElements() {
 }
 
 (async () => {
-    while (true) {
-        console.log('refreshing case notes');
-        await handleLoadCaseNotes(12345);
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-    }
+    await handleLoadCaseNotes(12345);
+    $('#reload-case-notes').on('click', async () => await handleLoadCaseNotes(12345));
 })();
 
 // load case notes
