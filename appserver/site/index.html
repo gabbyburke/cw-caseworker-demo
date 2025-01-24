@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script src="js/jQuery.js"></script>
+    <script src="js/jquery.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -17,14 +17,14 @@
     <!-- Header Area -->
     <header class="header">
         <div class="header__logo">
-            <img src="logo.png" alt="Child Welfare Logo" width="40" height="40">
+            <img src="img/cw_logo.png" alt="Child Welfare Logo" width="40" height="40">
         </div>
         <div class="header__search">
             <form role="search" class="search-form">
                 <label for="global-search" class="visually-hidden">Search cases</label>
                 <input type="search" id="global-search" class="search-form__input js-search-input"
                     placeholder="Search cases..." autocomplete="off">
-                <i class="material-icons search-form__icon">search</i>
+                <i class="material-icons search-form__icon inline-icon">search</i>
             </form>
         </div>
     </header>
@@ -115,8 +115,11 @@
                         placeholder="Enter case notes..." rows="6" aria-live="polite"></textarea>
                     <div class="notes-form__controls">
                         <span class="notes-form__count js-character-count">0 characters</span>
-                        <button type="submit" class="button button--primary">
-                            <i class="material-icons">save</i> Save Notes
+                        <button id="new-notes" type="submit" class="button button--primary">
+                            <i class="inline-icon material-icons" style="font-size:15px">add</i><span> New Notes</span>
+                        </button>
+                        <button id="save-case-notes" type="submit" class="button button--primary">
+                            <i class="inline-icon material-icons" style="font-size:15px">save</i> Save Notes
                         </button>
                     </div>
                 </form>
@@ -131,7 +134,6 @@
                 <ul id='previous-notes-list' class="previous-notes__list">
                     <!-- notes inserted here by script -->
                 </ul>
-                <button class="button button--text">View All Case Notes</button>
             </section>
         </main>
 
@@ -157,7 +159,8 @@
                     <label for="ai-input" class="visually-hidden">Ask AI Assistant</label>
                     <input type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
                         autocomplete="off" required>
-                    <button type="submit" class="chat-form__submit" id="chat-submit" aria-label="Send message">
+                    <button type="submit" onclick="javascript:handleChatBotQuery();" class="chat-form__submit"
+                        id="chat-submit" aria-label="Send message">
                         <i class="material-icons">send</i>
                     </button>
                 </form>

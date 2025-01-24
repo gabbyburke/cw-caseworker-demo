@@ -7,6 +7,10 @@ const submitButton = document.getElementById('chat-submit');
 const CHATBOT_URL = '/gemini';
 const CASENOTES_URL = '/casenotes/'
 
+let currentCaseId = 12345;
+let currentNoteType = 'note';
+let currentVisitId = -1;
+
 // Debug function to check elements
 function debugElements() {
     console.log('Debugging elements:');
@@ -17,7 +21,11 @@ function debugElements() {
 }
 
 (async () => {
-    handleLoadCaseNotes(12345);
+    while (true) {
+        console.log('refreshing case notes');
+        await handleLoadCaseNotes(12345);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
 })();
 
 // load case notes
@@ -41,22 +49,35 @@ async function handleLoadCaseNotes(case_id) {
         console.log('Response data:', data);
 
         if (data) {
+            $('#previous-notes-list').empty();
+
             for (let row of data) {
-                let summary = row.summary;
-                if (!summary) {
-                    summary = row.note.substring(0, 120) + (row.note.length > 120 ? '...' : '');
+                let summary = '<b>AI Summary:</b> ' + row.genai_summary;
+                if (!row.genai_summary) {
+                    summary = row.note ? row.note : '';
                 }
 
-                const element = `
-                    <li id="previous-notes-item-${row.visit_id}" class="previous-notes__item">
+                summary = summary.replace('(AI Assistant generated)', '<b>(AI Assistant generated)</b>');
+
+                const element_id = `previous-notes-item-${row.visit_id}`;
+                const type_header = row.note_type == 'genai' ? ': AI Assistant Note' : ''; // `Visit ${row.visit_id}`;
+                const element = $(`
+                    <li id="${element_id}" class="previous-notes__item">
                         <a href="#" class="previous-notes__link">
-                            <span class="previous-notes__date">${row.visit_date}</span>
+                            <span class="previous-notes__date">${row.visit_date}${type_header}</span>
                             <span class="previous-notes__preview">${summary}</span>
                         </a>
                     </li>
-                `;
+                `);
 
-                $('#previous-notes-list').append($(element));
+                $(element).data('note', row);
+                $(element).on('click', function () {
+                    const data = $(this).data('note');
+                    currentVisitId = data.visit_id;
+                    currentNoteType = data.note_type;
+                    $('#case-notes-input').val(data.note).trigger('focus');
+                });
+                $('#previous-notes-list').append(element);
             }
         } else {
             throw new Error('No response in data');
@@ -67,8 +88,8 @@ async function handleLoadCaseNotes(case_id) {
 }
 
 // Handle form submission
-async function handleSubmit(event) {
-    event.preventDefault();
+async function handleChatBotQuery(event) {
+    console.log('Submit button clicked');
     console.log('Form submitted');
     console.log('Form:', chatForm);
     console.log('Chat input element:', chatInput);
@@ -85,6 +106,8 @@ async function handleSubmit(event) {
         displayMessage('user', trimmedMessage);
         chatInput.value = '';
 
+        let full_prompt = gatherNotes().join("\n") + `\nUSER: ${trimmedMessage}`;
+
         // Show loading state
         const loadingMessage = document.createElement('div');
         loadingMessage.classList.add('chat-message', 'chat-message--loading');
@@ -100,7 +123,7 @@ async function handleSubmit(event) {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ message: trimmedMessage })
+                body: JSON.stringify({ message: full_prompt })
             });
 
             console.log('Response status:', response.status);
@@ -140,36 +163,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Display welcome message
-    displayMessage('bot', "Hello! I'm your AI assistant for case management. How can I help you today?");
+    displayMessage('bot', "Hello! I'm your AI assistant for case management. How can I help you today?", 'first-time');
 
     // Form submit event
     chatForm.onsubmit = function (event) {
         console.log('Form submit triggered');
-        handleSubmit(event);
+        handleChatBotQuery(event);
     };
 
-    // Button click event
-    submitButton.onclick = function (event) {
-        console.log('Submit button clicked');
-        handleSubmit(event);
-    };
+    $('#new-notes').on('click', () => {
+        event.preventDefault();
+        newNote()
+    });
+
+    $('#save-case-notes').on('click', async function () {
+        event.preventDefault();
+        const text = $('#case-notes-input').val();
+        const visit_date = new Date().toISOString().substring(0, 10);
+
+        const response = await fetch(`${CASENOTES_URL}${currentCaseId}/${currentVisitId || -1}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
+        });
+
+        handleLoadCaseNotes(currentCaseId);
+    });
 
     // Enter key event
     chatInput.onkeydown = function (event) {
         if (event.key === 'Enter') {
             console.log('Enter key pressed');
-            handleSubmit(event);
+            handleChatBotQuery(event);
         }
     };
 
     console.log('Event listeners set up complete');
 });
 
-function displayMessage(sender, text) {
+let messageCounter = 1;
+
+function displayMessage(sender, text, first) {
     console.log('Displaying message:', { sender, text });
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('chat-message', `chat-message--${sender}`);
-    messageElement.textContent = text;
-    chatWindow.appendChild(messageElement);
+    const icon = sender == 'bot' && first == undefined ? `<br/><i id='copy-over-${messageCounter}' class='material-icons copy-over virtual-button'>swap_horiz</i>` : '';
+    const messageElement = $(`
+        <div class="chat-message chat-message--${sender}">
+            <span>${text}</span>${icon}
+        </div>
+    `);
+    $('.js-chat-window').append(messageElement);
+    $(`#copy-over-${messageCounter}`).on('click', function (el) {
+        newNote();
+        const content = trimPoliteTrailingQuestion($(this).parent().children('span').text());
+        $('#case-notes-input').val('(AI Assistant generated) ' + content);
+        currentNoteType = 'genai';
+    });
+    messageCounter++;
     chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function newNote() {
+    $('#case-notes-input').val('').trigger('focus');
+
+    const case_notes = $('.previous-notes__item').map(function () { return $(this).data('note') });
+    currentVisitId = Math.max(...case_notes.map((_, n) => n.visit_id)) + 1;
+    currentNoteType = 'note';
+}
+
+function gatherNotes() {
+    const notes = [];
+    $('.previous-notes__item').each((idx, el) => {
+        const data = $(el).data('note');
+        notes.push(`NOTE: ${data.note} (recorded ${data.visit_date})`);
+    });
+    return notes;
+}
+
+function trimPoliteTrailingQuestion(s) {
+    if (s.slice(-1) != '?') {
+        return s;
+    }
+
+    const period_position = s.lastIndexOf('.');
+    const trimmed = s.substring(0, period_position + 1);
+    return trimmed;
 }

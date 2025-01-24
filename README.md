@@ -22,13 +22,15 @@ Under `appserver/` is a Cloud Run-hosted web app that serves the UI and hosts ba
 # Deployment
 
 1. **TBD: set up Cloud Run**
-1. From the `appserver/` directory, type `gcloud run deploy <NAME OF CLOUD RUN INSTANCE> --source .`. (Note the period at the end--that's important.)
+1. From the `appserver/` directory, type `gcloud run deploy cw-ignite2025 --region us-central1 --source .`. (Note the period at the end--that's important.)
 
 # TODO
 
-- [ ] Build out Cloud Run instance.
-- [ ] Write up how to create Cloud Run instance from command line.
+- [X] Build out Cloud Run instance.
+- [X] Write up how to create Cloud Run instance from command line.
 - [X] Build out BigQuery data set and table with seed data.
 - [ ] Write up BQ creating and seeding.
 - [ ] Build out Pub/Sub connecting BQ writes to API.
 - [ ] Add API to summarize a single case note.
+- [ ] Add a table for cases, join to case_notes.  Add case_id, primary_caregiver, children (as string, total hack), case_type, risk_level, summary
+

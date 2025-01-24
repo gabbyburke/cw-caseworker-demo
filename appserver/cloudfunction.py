@@ -100,7 +100,7 @@ def generate_response(user_message, chat_history):
 
         # Generate response using Gemini 2.0
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-1.5-flash",
             contents=contents,
             config=types.GenerateContentConfig(
                 temperature=1,

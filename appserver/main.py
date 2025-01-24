@@ -1,8 +1,49 @@
-from flask import Flask, request, Response, jsonify
-from geminisupport import generate_response
+from flask import Flask, request, Response, jsonify, redirect
+from geminisupport import generate_response, summarize
 from google.cloud import bigquery
 import json
 import os
+import time
+
+UNIQUE_CASE_NOTES_QUERY = """
+    select
+        agg.table.*
+    from (
+        select
+            case_id, visit_id,
+            ARRAY_AGG(STRUCT(table)
+            order by
+            version desc)[SAFE_OFFSET(0)] agg
+        from
+            `ignite2025.case_notes.case_notes` table
+        where case_id={}
+        group by
+            case_id, visit_id
+    )
+    order by visit_id desc
+"""
+
+NEXT_CASE_NOTES_TO_SUMMARIZE_QUERY = """
+    select
+        agg.table.*
+    from (
+        select
+            case_id, visit_id,
+            ARRAY_AGG(
+                STRUCT(table)
+                order by
+                version desc
+            )[SAFE_OFFSET(0)] agg
+        from
+            `ignite2025.case_notes.case_notes` table
+        group by
+            case_id, visit_id
+    )
+    where 
+        agg.table.note_type != 'genai'
+        and agg.table.genai_summary is null
+    order by case_id asc, visit_id desc
+"""
 
 bq = bigquery.Client()
 
@@ -11,18 +52,47 @@ app = Flask(__name__,
             static_folder='site',
             template_folder='')
 
-@app.route("/casenotes/<case_id>")
-def run_casenotes(case_id):
+@app.route("/", methods=['GET'])
+def default_route():
+    return redirect('/index.html')
 
+@app.route("/genai_auto_summarize", methods=['GET', 'PUT', 'POST'])
+def auto_summarize_case_notes():
+    query_job = bq.query(NEXT_CASE_NOTES_TO_SUMMARIZE_QUERY)  # API request
+    rows = query_job.result()  # Waits for query to finish
+
+    results = []
+
+    for row in rows:
+        data = dict(row)
+        summary = summarize(data['note'])
+        data['genai_summary'] = summary
+        data['version'] = round(time.time() * 1000)
+        data = json.loads(json.dumps(data, default=str))
+        table = bq.get_table("ignite2025.case_notes.case_notes")
+        errors = bq.insert_rows_json(table, [data])
+        results.append({'case_id': data['case_id'], 'visit_id': data['visit_id'], 'version': data['version'], 'genai_summary': data['genai_summary']})
+
+    if len(results) == 0:
+        return Response('{}', mimetype='application/json')
+    else:
+        return Response(results, mimetype='application/json')    
+
+@app.route("/casenotes/<case_id>/<visit_id>", methods=['PUT', 'POST'])
+def insert_casenotes(case_id, visit_id):
+    request_json = request.get_json(silent=True)
+    request_json['version'] = round(time.time() * 1000)
+    rows = [request_json]
+    table = bq.get_table("ignite2025.case_notes.case_notes")
+    errors = bq.insert_rows_json(table, rows)
+    if errors == []:
+        return "success", 200
+
+@app.route("/casenotes/<case_id>")
+def get_casenotes(case_id):
     if case_id.isnumeric():
         # Perform a query.
-        query = (
-            f"""
-            select case_id, visit_id, visit_date, note from `ignite2025.case_notes.case_notes` as cn
-            where cn.case_id={case_id}
-            order by cn.visit_id desc
-            """)
-        query_job = bq.query(query)  # API request
+        query_job = bq.query(UNIQUE_CASE_NOTES_QUERY.format(case_id))  # API request
         rows = query_job.result()  # Waits for query to finish
 
         # result = [ {'case_id': r.case_id, 'visit_id': r.visit_id, 'visit_date': r.visit_date, 'note': r.note} for r in rows]
@@ -79,8 +149,6 @@ def run_gemini():
             'error': 'Internal server error',
             'details': str(e)
         }), mimetype='application/pdf')
-
-
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))

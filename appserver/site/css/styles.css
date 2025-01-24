@@ -499,6 +499,7 @@ body {
     box-shadow: var(--shadow-1);
     border: 1px solid var(--color-border);
     transition: all var(--transition-base);
+    height: 30%;
 }
 
 .previous-notes:hover {
@@ -523,6 +524,7 @@ body {
     list-style: none;
     margin-bottom: var(--spacing-md);
     overflow-y: scroll;
+    height: 90%;
 }
 
 .previous-notes__item {
@@ -587,6 +589,11 @@ body {
 
 .ai-assistant__title .material-icons {
     margin-right: var(--spacing-xs);
+}
+
+.copy-over {
+    color: var(--color-primary);
+    float: right;
 }
 
 .ai-assistant__toggle {
@@ -828,6 +835,19 @@ body {
     .case-container {
         margin-bottom: 64px;
         padding: var(--spacing-sm);
+    }
+
+    .inline-icon {
+        font-size: 15px !important;
+    }
+
+    .virtual-botton {
+        cursor: pointer;
+    }
+
+    .material-icons {
+        display: inline-flex;
+        vertical-align: top;
     }
 }
 
