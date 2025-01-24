@@ -4,8 +4,9 @@ const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('ai-input');
 const submitButton = document.getElementById('chat-submit');
 
-const CHATBOT_URL = '/gemini';
-const CASENOTES_URL = '/casenotes/'
+const CHATBOT_URL = '/gemini';;
+const CASENOTES_URL = '/casenotes/';
+const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
 
 let currentCaseId = 12345;
 let currentNoteType = 'note';
@@ -173,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newNote()
     });
 
-    $('#save-case-notes').on('click', async function () {
+    $('#save-case-notes').on('click', async function (event) {
         event.preventDefault();
         const text = $('#case-notes-input').val();
         const visit_date = new Date().toISOString().substring(0, 10);
@@ -187,7 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
         });
 
+        const last_case_id = currentCaseId;
+        const last_visit_id = currentVisitId;
+        newNote();
         handleLoadCaseNotes(currentCaseId);
+        setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 3000);
     });
 
     // Enter key event
@@ -247,4 +252,34 @@ function trimPoliteTrailingQuestion(s) {
     const period_position = s.lastIndexOf('.');
     const trimmed = s.substring(0, period_position + 1);
     return trimmed;
+}
+
+async function summarizeCaseNotes(case_id, visit_id) {
+    try {
+        const url = `${AUTO_SUMMARIZE_URL}/${case_id}/${visit_id}`;
+        console.log('Calling cloud function at:', url);
+        // Call cloud function
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (!data) {
+            throw new Error('No response in data');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }

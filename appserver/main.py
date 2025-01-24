@@ -56,27 +56,34 @@ app = Flask(__name__,
 def default_route():
     return redirect('/index.html')
 
-@app.route("/genai_auto_summarize", methods=['GET', 'PUT', 'POST'])
-def auto_summarize_case_notes():
-    query_job = bq.query(NEXT_CASE_NOTES_TO_SUMMARIZE_QUERY)  # API request
-    rows = query_job.result()  # Waits for query to finish
-
-    results = []
-
-    for row in rows:
-        data = dict(row)
-        summary = summarize(data['note'])
-        data['genai_summary'] = summary
-        data['version'] = round(time.time() * 1000)
-        data = json.loads(json.dumps(data, default=str))
-        table = bq.get_table("ignite2025.case_notes.case_notes")
-        errors = bq.insert_rows_json(table, [data])
-        results.append({'case_id': data['case_id'], 'visit_id': data['visit_id'], 'version': data['version'], 'genai_summary': data['genai_summary']})
-
-    if len(results) == 0:
+@app.route("/genai_auto_summarize/<case_id>/<visit_id>", methods=['GET', 'PUT', 'POST'])
+def auto_summarize_case_notes(case_id, visit_id):
+    query = f"""
+        select * from `ignite2025.case_notes.case_notes`
+        where case_id={case_id} and visit_id={visit_id}
+        order by version desc
+        limit 1
+    """
+    query_job = bq.query(query)  # API request
+    rows = query_job.result()  # will be 0 or 1 rows
+    if rows.total_rows == 0:
         return Response('{}', mimetype='application/json')
-    else:
-        return Response(results, mimetype='application/json')    
+    
+    row = next(rows)
+
+    if row['genai_summary'] != None or row['note_type'] == 'genai':
+        return Response('{}', mimetype='application/json')
+    
+    data = dict(row)
+    summary = summarize(data['note'])
+    data['genai_summary'] = summary
+    data['version'] = round(time.time() * 1000)
+    data = json.loads(json.dumps(data, default=str))
+    table = bq.get_table("ignite2025.case_notes.case_notes")
+    errors = bq.insert_rows_json(table, [data])
+    results = json.dumps({'case_id': data['case_id'], 'visit_id': data['visit_id'], 'version': data['version'], 'genai_summary': data['genai_summary']})
+
+    return Response(results, mimetype='application/json')    
 
 @app.route("/casenotes/<case_id>/<visit_id>", methods=['PUT', 'POST'])
 def insert_casenotes(case_id, visit_id):
