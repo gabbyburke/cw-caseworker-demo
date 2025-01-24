@@ -29,8 +29,12 @@ Under `appserver/` is a Cloud Run-hosted web app that serves the UI and hosts ba
 - [X] Build out Cloud Run instance.
 - [X] Write up how to create Cloud Run instance from command line.
 - [X] Build out BigQuery data set and table with seed data.
-- [ ] Write up BQ creating and seeding.
-- [ ] Build out Pub/Sub connecting BQ writes to API.
-- [ ] Add API to summarize a single case note.
+- [ ] ~~Write up BQ creating and seeding.~~
+- [ ] ~~Build out Pub/Sub connecting BQ writes to API.~~
+- [X] Add API to summarize a single case note.
+- [ ] Add animation for reloading cases
+- [ ] Add a Gemini animation next to "Save Note" while autosummarizing.
 - [ ] Add a table for cases, join to case_notes.  Add case_id, primary_caregiver, children (as string, total hack), case_type, risk_level, summary
+- [ ] Implement search?
+- [ ] 
 

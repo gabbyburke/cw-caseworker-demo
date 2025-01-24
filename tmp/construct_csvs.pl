@@ -19,7 +19,7 @@ foreach my $filename ( <../data/*.json> ) {
         push @row, '"note"';
         push @row, 'null';
         push @row, 1;
-        say $out join( ", ", @row );
+        say $out join( ",", @row );
     }
 }
 

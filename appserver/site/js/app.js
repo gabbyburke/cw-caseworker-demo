@@ -50,6 +50,9 @@ async function handleLoadCaseNotes(case_id) {
             $('#previous-notes-list').empty();
 
             for (let row of data) {
+                if (row.genai_summary == 'null') {
+                    row.genai_summary = null;
+                }
                 let summary = '<b>AI Summary:</b> ' + row.genai_summary;
                 if (!row.genai_summary) {
                     summary = row.note ? row.note : '';
@@ -192,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const last_visit_id = currentVisitId;
         newNote();
         handleLoadCaseNotes(currentCaseId);
-        setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 3000);
+        setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
     });
 
     // Enter key event
