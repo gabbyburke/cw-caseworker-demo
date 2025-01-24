@@ -884,3 +884,24 @@ body {
         border: 1px solid #000;
     }
 }
+
+/* Rotation stuff
+   ========================================================================== */
+.rotating {
+    animation: rotate 2s linear;
+    /* animation-iteration-count: infinite; */
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(-180deg);
+    }
+
+    100% {
+        transform: rotate(-360deg);
+    }
+}

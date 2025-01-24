@@ -29,6 +29,9 @@ function debugElements() {
 
 // load case notes
 async function handleLoadCaseNotes(case_id) {
+    const new_node = $('#reload-case-notes').clone();
+    $('#reload-case-notes').replaceWith(new_node);
+
     try {
         const response = await fetch(CASENOTES_URL + case_id, {
             method: 'GET',
@@ -173,9 +176,14 @@ document.addEventListener('DOMContentLoaded', () => {
         handleChatBotQuery(event);
     };
 
-    $('#new-notes').on('click', () => {
+    $('#new-notes').on('click', (event) => {
         event.preventDefault();
-        newNote()
+        newNote();
+    });
+
+    $('#new-transcription').on('click', (event) => {
+        event.preventDefault();
+        newNote("Phone call transcription:\n\n");
     });
 
     $('#save-case-notes').on('click', async function (event) {
@@ -231,8 +239,8 @@ function displayMessage(sender, text, first) {
     chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function newNote() {
-    $('#case-notes-input').val('').trigger('focus');
+function newNote(header) {
+    $('#case-notes-input').val(header || '').trigger('focus');
 
     const case_notes = $('.previous-notes__item').map(function () { return $(this).data('note') });
     currentVisitId = Math.max(...case_notes.map((_, n) => n.visit_id)) + 1;
