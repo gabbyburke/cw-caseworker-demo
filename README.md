@@ -36,5 +36,7 @@ Under `appserver/` is a Cloud Run-hosted web app that serves the UI and hosts ba
 - [ ] Add a Gemini animation next to "Save Note" while autosummarizing.
 - [ ] Add a table for cases, join to case_notes.  Add case_id, primary_caregiver, children (as string, total hack), case_type, risk_level, summary
 - [ ] Implement search?
-- [ ] 
-
+- [ ] Audio transcription?
+- [ ] Talk with Gemini?
+- [ ] Fix warning on enter key in chat space
+- [ ] Add keyboard shortcuts

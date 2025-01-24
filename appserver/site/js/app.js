@@ -23,6 +23,7 @@ function debugElements() {
 
 (async () => {
     await handleLoadCaseNotes(12345);
+    newNote();
     $('#reload-case-notes').on('click', async () => await handleLoadCaseNotes(12345));
 })();
 
