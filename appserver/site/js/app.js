@@ -8,7 +8,7 @@ const CHATBOT_URL = '/gemini';;
 const CASENOTES_URL = '/casenotes/';
 const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
 
-let currentCaseId = 12345;
+let currentCaseId = 67196;
 let currentNoteType = 'note';
 let currentVisitId = -1;
 
@@ -22,9 +22,9 @@ function debugElements() {
 }
 
 (async () => {
-    await handleLoadCaseNotes(12345);
+    await handleLoadCaseNotes(currentCaseId);
     newNote();
-    $('#reload-case-notes').on('click', async () => await handleLoadCaseNotes(12345));
+    $('#reload-case-notes').on('click', async function () { await handleLoadCaseNotes(currentCaseId); });
 })();
 
 // load case notes
@@ -210,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enter key event
     chatInput.onkeydown = function (event) {
         if (event.key === 'Enter') {
+            event.preventDefault();
             console.log('Enter key pressed');
             handleChatBotQuery(event);
         }
@@ -267,6 +268,9 @@ function trimPoliteTrailingQuestion(s) {
 }
 
 async function summarizeCaseNotes(case_id, visit_id) {
+    $('#save-gemini-logo').replaceWith($('#save-gemini-logo').clone());
+    $('#save-gemini-logo').addClass('rotating');
+
     try {
         const url = `${AUTO_SUMMARIZE_URL}/${case_id}/${visit_id}`;
         console.log('Calling cloud function at:', url);

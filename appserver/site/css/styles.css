@@ -857,6 +857,15 @@ body {
     vertical-align: text-bottom;
 }
 
+#save-gemini-logo {
+    vertical-align: bottom !important;
+    margin-right: -30px;
+}
+
+#save-button-div {
+    padding-right: 25px;
+}
+
 /* Print Styles
    ========================================================================== */
 @media print {
@@ -889,7 +898,6 @@ body {
    ========================================================================== */
 .rotating {
     animation: rotate 2s linear;
-    /* animation-iteration-count: infinite; */
 }
 
 @keyframes rotate {

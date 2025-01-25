@@ -62,7 +62,7 @@
             <!-- Case Summary Section -->
             <section class="case-summary">
                 <header class="case-summary__header">
-                    <h1 class="case-summary__title">Case #CW-12345</h1>
+                    <h1 class="case-summary__title">Case #CW-67196</h1>
                     <div class="case-summary__status">Active</div>
                 </header>
 
@@ -75,12 +75,12 @@
                         <div class="family-info__list">
                             <table>
                                 <tr>
-                                    <td><b>Primary Caregiver:</b></td>
-                                    <td>Jane Doe</td>
+                                    <td><b>Primary Caregivers:</b></td>
+                                    <td>Sofia Garcia, Luis Garcia</td>
                                 </tr>
                                 <tr>
                                     <td><b>Children:</b></td>
-                                    <td>John Doe (8), Sarah Doe (6)</td>
+                                    <td>Isabella Garcia (8), Miguel Garcia (6)</td>
                                 </tr>
                                 <tr>
                                     <td><b>Case Type:</b></td>
@@ -131,9 +131,12 @@
                             <i class="inline-icon material-icons" style="font-size:15px">phone</i><span> New Phone
                                 Call</span>
                         </button>
-                        <button id="save-case-notes" type="submit" class="button button--primary">
-                            <i class="inline-icon material-icons" style="font-size:15px">save</i> Save Notes
-                        </button>
+                        <div style="padding-right:25px" class="save-button-div">
+                            <button id="save-case-notes" type="submit" class="button button--primary">
+                                <i class="inline-icon material-icons" style="font-size:15px">save</i> Save Notes
+                            </button>
+                            <img id="save-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                        </div>
                     </div>
                 </form>
             </section>
