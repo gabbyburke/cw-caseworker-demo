@@ -11,6 +11,7 @@ const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
 let currentCaseId = 67196;
 let currentNoteType = 'note';
 let currentVisitId = -1;
+let micOn = false;
 
 // Debug function to check elements
 function debugElements() {
@@ -32,7 +33,10 @@ function debugElements() {
             event.preventDefault();
             await handleSaveNotes();
         }
-    })
+    });
+    $('#case-notes-input').on('keyup', async function (event) {
+        $('#char-count').text($('#case-notes-input').val().length);
+    });
 })();
 
 // load case notes
@@ -327,3 +331,25 @@ async function handleSaveNotes(event) {
     handleLoadCaseNotes(currentCaseId);
     setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
 }
+
+let timeout;
+let previousValue = "";
+
+$('#case-notes-input').on("input", () => {
+    if (!micOn) {
+        return;
+    }
+
+    if (timeout) {
+        clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+        if (textarea.value !== previousValue) {
+            console.log("Textarea has changed.");
+            previousValue = textarea.value;
+        } else {
+            console.log("Textarea has not changed in 1 second.");
+        }
+    }, 1000);
+});
