@@ -8,7 +8,8 @@ const CHATBOT_URL = '/gemini';;
 const CASENOTES_URL = '/casenotes/';
 const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
 
-let currentCaseId = 67196;
+// let currentCaseId = 67196;
+let currentCaseId = 12345;
 let currentNoteType = 'note';
 let currentVisitId = -1;
 let micOn = false;
@@ -28,15 +29,26 @@ function debugElements() {
     $('#reload-case-notes').on('click', async function () {
         await handleLoadCaseNotes(currentCaseId);
     });
+
     $('#case-notes-input').on('keydown', async function (event) {
         if (event.key == 'Enter' && event.metaKey) {
             event.preventDefault();
             await handleSaveNotes();
         }
     });
+
     $('#case-notes-input').on('keyup', async function (event) {
         $('#char-count').text($('#case-notes-input').val().length);
     });
+
+    $('#mic-button').on('click', () => {
+        micOn = !micOn;
+        if (micOn) {
+            $('#mic-button').addClass('button--icon');
+        } else {
+            $('#mic-button').removeClass('button--icon');
+        }
+    })
 })();
 
 // load case notes
@@ -337,19 +349,26 @@ let previousValue = "";
 
 $('#case-notes-input').on("input", () => {
     if (!micOn) {
+        previousValue = $('#case-notes-input').val();
         return;
     }
 
     if (timeout) {
+        console.log('Clearing timeout due to change');
         clearTimeout(timeout);
     }
 
+    previousValue = $('#case-notes-input').val();
+
+    console.log('Creating new timeout');
     timeout = setTimeout(() => {
-        if (textarea.value !== previousValue) {
+        if ($('#case-notes-input').val() !== previousValue) {
             console.log("Textarea has changed.");
-            previousValue = textarea.value;
+            console.log(`previous: "${previousValue}"`);
+            console.log(`current:  "${$('#case-notes-input').val()}"`);
+            previousValue = $('#case-notes-input').val();
         } else {
-            console.log("Textarea has not changed in 1 second.");
+            console.log("Textarea has not changed in 2 seconds.");
         }
-    }, 1000);
+    }, 2000);
 });
