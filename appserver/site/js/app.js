@@ -24,12 +24,20 @@ function debugElements() {
 (async () => {
     await handleLoadCaseNotes(currentCaseId);
     newNote();
-    $('#reload-case-notes').on('click', async function () { await handleLoadCaseNotes(currentCaseId); });
+    $('#reload-case-notes').on('click', async function () {
+        await handleLoadCaseNotes(currentCaseId);
+    });
+    $('#case-notes-input').on('keydown', async function (event) {
+        if (event.key == 'Enter' && event.metaKey) {
+            event.preventDefault();
+            await handleSaveNotes();
+        }
+    })
 })();
 
 // load case notes
 async function handleLoadCaseNotes(case_id) {
-    const new_node = $('#reload-case-notes').clone();
+    const new_node = $('#reload-case-notes').clone(true, true);
     $('#reload-case-notes').replaceWith(new_node);
 
     try {
@@ -65,11 +73,15 @@ async function handleLoadCaseNotes(case_id) {
                 summary = summary.replace('(AI Assistant generated)', '<b>(AI Assistant generated)</b>');
 
                 const element_id = `previous-notes-item-${row.visit_id}`;
-                const type_header = row.note_type == 'genai' ? ': AI Assistant Note' : ''; // `Visit ${row.visit_id}`;
+                const type_header = row.note_type == 'genai'
+                    ? ': AI Assistant Note'
+                    : row.note.startsWith('Phone call transcription:')
+                        ? "Phone Call"
+                        : "Visit";
                 const element = $(`
                     <li id="${element_id}" class="previous-notes__item">
                         <a href="#" class="previous-notes__link">
-                            <span class="previous-notes__date">${row.visit_date}${type_header}</span>
+                            <span class="previous-notes__date">${row.visit_date} - ${type_header}</span>
                             <span class="previous-notes__preview">${summary}</span>
                         </a>
                     </li>
@@ -105,6 +117,10 @@ async function handleChatBotQuery(event) {
 
     const trimmedMessage = message.trim();
     console.log('Trimmed message:', trimmedMessage);
+
+    $('.ai-mentor').animate({
+        scrollTop: $('.ai-mentor').prop('scrollHeight'),
+    }, 500);
 
     if (trimmedMessage) {
         // Display user message
@@ -151,6 +167,9 @@ async function handleChatBotQuery(event) {
             displayMessage('bot', 'I apologize, but I encountered an error. Please try again.');
         } finally {
             loadingMessage.remove();
+            $('.ai-mentor').animate({
+                scrollTop: $('.ai-mentor').prop('scrollHeight'),
+            }, 500);
         }
     } else {
         console.log('Empty message, not sending');
@@ -186,26 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newNote("Phone call transcription:\n\n");
     });
 
-    $('#save-case-notes').on('click', async function (event) {
-        event.preventDefault();
-        const text = $('#case-notes-input').val();
-        const visit_date = new Date().toISOString().substring(0, 10);
-
-        const response = await fetch(`${CASENOTES_URL}${currentCaseId}/${currentVisitId || -1}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
-        });
-
-        const last_case_id = currentCaseId;
-        const last_visit_id = currentVisitId;
-        newNote();
-        handleLoadCaseNotes(currentCaseId);
-        setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
-    });
+    $('#save-case-notes').on('click', async () => await handleSaveNotes());
 
     // Enter key event
     chatInput.onkeydown = function (event) {
@@ -298,4 +298,32 @@ async function summarizeCaseNotes(case_id, visit_id) {
     } catch (error) {
         console.error('Error:', error);
     }
+}
+
+async function handleSaveNotes(event) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    const text = $('#case-notes-input').val();
+    if (text == '') {
+        return;
+    }
+
+    const visit_date = new Date().toISOString().substring(0, 10);
+
+    const response = await fetch(`${CASENOTES_URL}${currentCaseId}/${currentVisitId || -1}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
+    });
+
+    const last_case_id = currentCaseId;
+    const last_visit_id = currentVisitId;
+    newNote();
+    handleLoadCaseNotes(currentCaseId);
+    setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
 }
