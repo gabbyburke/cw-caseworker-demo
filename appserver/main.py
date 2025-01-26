@@ -1,5 +1,5 @@
 from flask import Flask, request, Response, jsonify, redirect
-from geminisupport import generate_response, summarize
+from geminisupport import generate_response, summarize, fix_transcript
 from google.cloud import bigquery
 import json
 import os
@@ -23,28 +23,6 @@ UNIQUE_CASE_NOTES_QUERY = """
     order by visit_id desc
 """
 
-NEXT_CASE_NOTES_TO_SUMMARIZE_QUERY = """
-    select
-        agg.table.*
-    from (
-        select
-            case_id, visit_id,
-            ARRAY_AGG(
-                STRUCT(table)
-                order by
-                version desc
-            )[SAFE_OFFSET(0)] agg
-        from
-            `ignite2025.case_notes.case_notes` table
-        group by
-            case_id, visit_id
-    )
-    where 
-        agg.table.note_type != 'genai'
-        and agg.table.genai_summary is null
-    order by case_id asc, visit_id desc
-"""
-
 bq = bigquery.Client()
 
 app = Flask(__name__,
@@ -55,6 +33,13 @@ app = Flask(__name__,
 @app.route("/", methods=['GET'])
 def default_route():
     return redirect('/index.html')
+
+@app.route("/massage_transcript", methods=['POST'])
+def massage_transcript():
+    fixed = fix_transcript(request.get_json())
+    results = json.dumps({'fixed': fixed})
+
+    return Response(results, mimetype='application/json')
 
 @app.route("/genai_auto_summarize/<case_id>/<visit_id>", methods=['GET', 'PUT', 'POST'])
 def auto_summarize_case_notes(case_id, visit_id):

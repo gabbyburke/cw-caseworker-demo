@@ -4,9 +4,10 @@ const chatForm = document.getElementById('chat-form');
 const chatInput = document.getElementById('ai-input');
 const submitButton = document.getElementById('chat-submit');
 
-const CHATBOT_URL = '/gemini';;
+const CHATBOT_URL = '/gemini';
 const CASENOTES_URL = '/casenotes/';
 const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
+const MASSAGE_TRANSCRIPT_URL = '/massage_transcript';
 
 // let currentCaseId = 67196;
 let currentCaseId = 12345;
@@ -45,8 +46,10 @@ function debugElements() {
         micOn = !micOn;
         if (micOn) {
             $('#mic-button').addClass('button--icon');
+            recog.start();
         } else {
             $('#mic-button').removeClass('button--icon');
+            recog.stop();
         }
     })
 })();
@@ -214,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#new-notes').on('click', (event) => {
         event.preventDefault();
         newNote();
+        reset_recog();
     });
 
     $('#new-transcription').on('click', (event) => {
@@ -372,3 +376,131 @@ $('#case-notes-input').on("input", () => {
         }
     }, 2000);
 });
+
+const recog = new webkitSpeechRecognition();
+recog.continuous = true;
+recog.interimResults = true;
+
+let chunks, max_len, raw_buffer, massaged_buffer, prev;
+reset_recog();
+
+function reset_recog() {
+    chunks = [];
+    max_len = 0;
+    raw_buffer = "";
+    massaged_buffer = "";
+    prev = "";
+}
+
+recog.onresult = function (event) {
+    const ta = document.querySelector('#case-notes-input');
+
+    if (event.results.length > 0) {
+        // console.log(`received ${event.results.length} blocks`);
+    }
+
+    console.log(`ta.value is "${ta.value}"`);
+    console.log(`Resetting to raw buffer "${raw_buffer}"`);
+    ta.value = raw_buffer;
+
+    if (ta.value.length < max_len) {
+        console.log(`*** TA.VALUE ${ta.value.length} < MAX_LEN ${max_len}`)
+    } else {
+        max_len = ta.value;
+    }
+    if (ta.value != prev) {
+        // console.log(`onresult: Resetting ta to "${ta.value}"`);
+        // prev = ta.value;
+    }
+
+    ta.scrollTop = ta.scrollHeight;
+
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+            chunks.push(event.results[i][0].transcript);
+            raw_buffer += event.results[i][0].transcript;
+            // massage_transcript(raw_buffer, ta.value.length);
+            massage_transcript(ta.value);
+        } else {
+            ta.value += event.results[i][0].transcript;
+            ta.scrollTop = ta.scrollHeight;
+        }
+    }
+}
+
+recog.onerror = function (event) {
+    if (event.error == 'no-speech') {
+        console.log('info_no_speech');
+    }
+    if (event.error == 'audio-capture') {
+        console.log('info_no_microphone');
+    }
+    if (event.error == 'not-allowed') {
+        if (event.timeStamp - start_timestamp < 100) {
+            console.log('info_blocked');
+        } else {
+            console.log('info_denied');
+        }
+    }
+};
+
+recog.onend = function (event) {
+    let msg = '********* Ended!';
+    const ta = document.querySelector('#case-notes-input')
+    // ta.value = chunks.join(' ') + ' ';
+    if (ta.value < max_len) {
+        debugger;
+    } else {
+        max_len = ta.value;
+    }
+    console.log(`* ta.value=${ta.value}`);
+    ta.scrollTop = ta.scrollHeight;
+
+    if (micOn) {
+        msg += ' restarting...';
+        recog.start();
+    } else {
+        ta.value = massaged_buffer;
+    }
+    console.log(msg);
+}
+
+async function massage_transcript(text) {
+    try {
+        const response = await fetch(MASSAGE_TRANSCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(text)
+        });
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const ta = document.querySelector('#case-notes-input')
+
+        if (data.fixed != null) {
+            massaged_buffer = data.fixed;
+            console.log(`massaged text: "${data.fixed}"`);
+            if (massaged_buffer.substring(-1) != ' ') {
+                massaged_buffer += ' ';
+            }
+            const current_text = raw_buffer;
+            const new_text = massaged_buffer + current_text.substring(text.length + 1);
+            console.log(`Replacing ta[0..${text.length + 1}]: "${massaged_buffer}" + "${current_text.substring(text.length + 1)}"`);
+            ta.value = new_text;
+            raw_buffer = new_text;
+        } else {
+            throw new Error('No response in data');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    } finally {
+
+    }
+}

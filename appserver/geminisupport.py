@@ -31,6 +31,11 @@ SYSTEM_INSTRUCTION = SYSINSTR_BODY + SYSINSTR_STRUCTURE
 
 SYSINSTR_SUMMMARY_INSTRUCTION = SYSINSTR_BODY + SYSINSTR_TERSE + SYSINSTR_SUMMARIZE
 
+TRANSCRIPT_INSTRUCTION = \
+    'The text starting at "TEXT:" was transcribed from an audio source and represents the literal words spoken. ' \
+    'Please interpret as literally as possible, using the words in the transcription--just turn it into proper sentences. ' \
+    'ONLY respond with your interpretation and nothing else.'
+
 # Initialize Vertex AI with GenAI - moved inside function to prevent cold start issues
 def initialize_client():
     return genai.Client(
@@ -159,6 +164,65 @@ def summarize(note):
                     )
                 ],
                 system_instruction=[types.Part.from_text(SYSINSTR_SUMMMARY_INSTRUCTION)]
+            )
+        )
+
+        # Collect response
+        full_response = ""
+        if hasattr(response, 'text'):
+            full_response = response.text
+        else:
+            for chunk in response:
+                if chunk.text:
+                    full_response += chunk.text
+
+        return full_response.strip()
+
+    except Exception as e:
+        raise Exception(f"Failed to generate response: {str(e)}")
+
+def fix_transcript(text):
+    if(text == ''):
+        return ''
+    
+    try:
+    # Initialize client for each request
+        client = initialize_client()
+
+        contents = []
+        contents.append(types.Content(
+            role="user",
+            parts=[types.Part.from_text(text)]
+        ))
+
+        # Generate response using Gemini 2.0
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=contents,
+            config=types.GenerateContentConfig(
+                temperature=1,
+                top_p=0.95,
+                max_output_tokens=8192,
+                response_modalities=["TEXT"],
+                safety_settings=[
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HATE_SPEECH",
+                        threshold="OFF"
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold="OFF"
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold="OFF"
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HARASSMENT",
+                        threshold="OFF"
+                    )
+                ],
+                system_instruction=[types.Part.from_text(TRANSCRIPT_INSTRUCTION)]
             )
         )
 
