@@ -56,7 +56,13 @@ function debugElements() {
             $('#case-notes-input').scrollTop($('#case-notes-input').prop('scrollHeight'));
             recog.stop();
         }
-    })
+    });
+
+    $('body').on('keydown', async function (event) {
+        if (event.key == ' ' && event.ctrlKey) {
+            $('#mic-button').trigger('click');
+        }
+    });
 })();
 
 // load case notes
