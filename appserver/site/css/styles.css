@@ -400,6 +400,11 @@ body {
     letter-spacing: var(--letter-spacing-base);
     transition: all var(--transition-base);
     background-color: var(--color-surface);
+    overflow-y: scroll;
+}
+
+.notes-form__input::-webkit-scrollbar {
+    display: none;
 }
 
 .notes-form__input:hover {
@@ -875,6 +880,10 @@ body {
     display: none;
     overflow-y: scroll;
     height: 106.5px;
+}
+
+#transcription-region::-webkit-scrollbar {
+    display: none;
 }
 
 #processed-text {

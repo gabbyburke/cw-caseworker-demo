@@ -407,21 +407,21 @@ let processed_segment, current_segment;
 
 reset_recog();
 
-// let prev = '';
+let prev = '';
 let render_interval = setInterval(() => {
     if (micOn) {
         let processed_text = (processed_segment.processed != null ? processed_segment.processed : '');
         let contents = processed_text
             + processed_segment.pending
             + current_segment.raw;
-        // if (contents == prev) { return; }
+        if (contents == prev) { return; }
         // console.log(`rendering "${contents}"`);
         $('#case-notes-input').val(contents).scrollTop($('#case-notes-input').prop('scrollHeight'));
-        // prev = contents;
+        prev = contents;
         $('#processed-text').text(processed_text);
         $('#pending-text').text(processed_segment.pending);
         $('#raw-text').text(current_segment.raw);
-        $('#transcription-region').val(contents).scrollTop($('#transcription-region').prop('scrollHeight'));
+        $('#transcription-holder').scrollTop($('#transcription-holder').prop('scrollHeight'));
     }
 }, 300);
 
