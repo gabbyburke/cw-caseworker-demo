@@ -63,6 +63,10 @@ function debugElements() {
             $('#mic-button').trigger('click');
         }
     });
+
+    $('#risk-level').on('click', () => {
+        $('#risk-level').text('Low').removeClass('risk-level--medium').addClass('risk-level--low').addClass('size-pulse');;
+    });
 })();
 
 // load case notes

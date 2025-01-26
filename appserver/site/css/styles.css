@@ -893,6 +893,12 @@ body {
     opacity: 0%;
 }
 
+#risk-level {
+    display: inline-block;
+    width: 100px;
+    text-align: center;
+}
+
 /* Print Styles
    ========================================================================== */
 @media print {
@@ -956,5 +962,23 @@ body {
 
     100% {
         opacity: 0;
+    }
+}
+
+.size-pulse {
+    animation: sizePulse 1.5s;
+}
+
+@keyframes sizePulse {
+    0% {
+        transform: scale(100%);
+    }
+
+    50% {
+        transform: scale(200%);
+    }
+
+    100% {
+        transform: scale(100%);
     }
 }
