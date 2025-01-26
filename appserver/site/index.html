@@ -113,6 +113,9 @@
                         Case Notes
                     </span>
                     <span style="order:2;margin-left:auto">
+                        <span id="transcribe-gemini-logo-holder">
+                            <img id="transcribe-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                        </span>
                         <button id="mic-button" type="button" class="button js-voice-input"
                             aria-label="Start voice input">
                             <i style="margin-right:0px !important" class="material-icons">mic</i>
@@ -120,9 +123,19 @@
                     </span>
                 </h2>
                 <form class="notes-form js-notes-form">
-                    <label for="case-notes-input" class="visually-hidden">Enter case notes</label>
-                    <textarea id="case-notes-input" class="notes-form__input js-notes-input"
-                        placeholder="Enter case notes..." rows="6" aria-live="polite"></textarea>
+                    <div id="textarea-region">
+                        <label for="case-notes-input" class="visually-hidden">Enter case notes</label>
+                        <textarea id="case-notes-input" class="notes-form__input js-notes-input"
+                            placeholder="Enter case notes..." rows="6" aria-live="polite"></textarea>
+                    </div>
+                    <div id="transcription-region">
+                        <div class="notes-form__input">
+                            <div class="visually-hidden"></div>
+                            <span id="processed-text"></span>
+                            <span id="pending-text"></span>
+                            <span id="raw-text"></span>
+                        </div>
+                    </div>
                     <div class="notes-form__controls">
                         <span class="notes-form__count js-character-count"><span id='char-count'>0</span>
                             characters</span>
@@ -133,11 +146,13 @@
                             <i class="inline-icon material-icons" style="font-size:15px">phone</i><span> New Phone
                                 Call</span>
                         </button>
-                        <div style="padding-right:25px" class="save-button-div">
+                        <div class="save-button-div">
+                            <span id='save-gemini-logo-holder'>
+                                <img id="save-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                            </span>
                             <button id="save-case-notes" type="submit" class="button button--primary">
                                 <i class="inline-icon material-icons" style="font-size:15px">save</i> Save Notes
                             </button>
-                            <img id="save-gemini-logo" class="gemini-logo" src="img/gemini.png" />
                         </div>
                     </div>
                 </form>
@@ -179,10 +194,10 @@
                 <h2 class="ai-mentor__title">
                     <img class="gemini-logo" src="img/gemini.png"><span>AI Assistant</span>
                 </h2>
-                <button class="ai-mentor__toggle js-mentor-toggle" aria-label="Toggle AI Assistant"
+                <!-- <button class="ai-mentor__toggle js-mentor-toggle" aria-label="Toggle AI Assistant"
                     aria-expanded="true">
                     <i class="material-icons">chevron_right</i>
-                </button>
+                </button> -->
             </header>
 
             <div class="ai-mentor__content js-mentor-content">

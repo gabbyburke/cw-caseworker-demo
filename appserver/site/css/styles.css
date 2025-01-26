@@ -860,7 +860,7 @@ body {
 
 #save-gemini-logo {
     vertical-align: bottom !important;
-    margin-right: -30px;
+    opacity: 0%;
 }
 
 #save-button-div {
@@ -869,6 +869,28 @@ body {
 
 .ai-mentor {
     overflow-y: scroll;
+}
+
+#transcription-region {
+    display: none;
+    overflow-y: scroll;
+    height: 106.5px;
+}
+
+#processed-text {
+    font-weight: bold;
+}
+
+#pending-text {
+    color: #79747E;
+}
+
+#raw-text {
+    color: #79747E;
+}
+
+#transcribe-gemini-logo {
+    opacity: 0%;
 }
 
 /* Print Styles
@@ -916,5 +938,23 @@ body {
 
     100% {
         transform: rotate(-360deg);
+    }
+}
+
+.pulse {
+    animation: pulse 3s;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
     }
 }

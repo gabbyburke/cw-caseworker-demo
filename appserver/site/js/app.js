@@ -34,7 +34,7 @@ function debugElements() {
     $('#case-notes-input').on('keydown', async function (event) {
         if (event.key == 'Enter' && event.metaKey) {
             event.preventDefault();
-            await handleSaveNotes();
+            await handleSaveNotes(event);
         }
     });
 
@@ -45,10 +45,15 @@ function debugElements() {
     $('#mic-button').on('click', () => {
         micOn = !micOn;
         if (micOn) {
-            $('#mic-button').addClass('button--icon');
+            $('#mic-button').addClass('button--primary');
+            $('#textarea-region').css('display', 'none');
+            $('#transcription-region').css('display', 'block');
             recog.start();
         } else {
-            $('#mic-button').removeClass('button--icon');
+            $('#mic-button').removeClass('button--primary');
+            $('#textarea-region').css('display', 'block');
+            $('#transcription-region').css('display', 'none');
+            $('#case-notes-input').scrollTop($('#case-notes-input').prop('scrollHeight'));
             recog.stop();
         }
     })
@@ -225,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newNote("Phone call transcription:\n\n");
     });
 
-    $('#save-case-notes').on('click', async () => await handleSaveNotes());
+    $('#save-case-notes').on('click', async (event) => await handleSaveNotes(event));
 
     // Enter key event
     chatInput.onkeydown = function (event) {
@@ -288,8 +293,8 @@ function trimPoliteTrailingQuestion(s) {
 }
 
 async function summarizeCaseNotes(case_id, visit_id) {
-    $('#save-gemini-logo').replaceWith($('#save-gemini-logo').clone());
-    $('#save-gemini-logo').addClass('rotating');
+    $('#save-gemini-logo-holder').empty();
+    $('#save-gemini-logo-holder').append($(`<img id="save-gemini-logo" class="gemini-logo pulse" src="img/gemini.png" />`));
 
     try {
         const url = `${AUTO_SUMMARIZE_URL}/${case_id}/${visit_id}`;
@@ -392,16 +397,21 @@ let processed_segment, current_segment;
 
 reset_recog();
 
-let prev = '';
+// let prev = '';
 let render_interval = setInterval(() => {
     if (micOn) {
-        let contents = (processed_segment.processed != null ? processed_segment.processed : '')
+        let processed_text = (processed_segment.processed != null ? processed_segment.processed : '');
+        let contents = processed_text
             + processed_segment.pending
             + current_segment.raw;
-        if (contents == prev) { return; }
+        // if (contents == prev) { return; }
         // console.log(`rendering "${contents}"`);
         $('#case-notes-input').val(contents).scrollTop($('#case-notes-input').prop('scrollHeight'));
-        prev = contents;
+        // prev = contents;
+        $('#processed-text').text(processed_text);
+        $('#pending-text').text(processed_segment.pending);
+        $('#raw-text').text(current_segment.raw);
+        $('#transcription-region').val(contents).scrollTop($('#transcription-region').prop('scrollHeight'));
     }
 }, 300);
 
@@ -421,6 +431,9 @@ recog.onresult = function (event) {
 
 async function massage_transcript() {
     try {
+        // $('#transcribe-gemini-logo').replaceWith($('#transcribe-gemini-logo').clone(true, true));
+        $('#transcribe-gemini-logo-holder').empty();
+        $('#transcribe-gemini-logo-holder').append($(`<img id="transcribe-gemini-logo" class="gemini-logo pulse" src="img/gemini.png" />`));
         const response = await fetch(MASSAGE_TRANSCRIPT_URL, {
             method: 'POST',
             headers: {
