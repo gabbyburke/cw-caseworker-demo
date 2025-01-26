@@ -381,50 +381,71 @@ const recog = new webkitSpeechRecognition();
 recog.continuous = true;
 recog.interimResults = true;
 
-let chunks, max_len, raw_buffer, massaged_buffer, prev;
-reset_recog();
+function new_segment() { return { raw: '', pending: '', processed: null } };
 
 function reset_recog() {
-    chunks = [];
-    max_len = 0;
-    raw_buffer = "";
-    massaged_buffer = "";
-    prev = "";
+    processed_segment = new_segment();
+    current_segment = new_segment();
 }
 
+let processed_segment, current_segment;
+
+reset_recog();
+
+let prev = '';
+let render_interval = setInterval(() => {
+    if (micOn) {
+        let contents = (processed_segment.processed != null ? processed_segment.processed : '')
+            + processed_segment.pending
+            + current_segment.raw;
+        if (contents == prev) { return; }
+        // console.log(`rendering "${contents}"`);
+        $('#case-notes-input').val(contents).scrollTop($('#case-notes-input').prop('scrollHeight'));
+        prev = contents;
+    }
+}, 300);
+
 recog.onresult = function (event) {
-    const ta = document.querySelector('#case-notes-input');
-
-    if (event.results.length > 0) {
-        // console.log(`received ${event.results.length} blocks`);
-    }
-
-    console.log(`ta.value is "${ta.value}"`);
-    console.log(`Resetting to raw buffer "${raw_buffer}"`);
-    ta.value = raw_buffer;
-
-    if (ta.value.length < max_len) {
-        console.log(`*** TA.VALUE ${ta.value.length} < MAX_LEN ${max_len}`)
-    } else {
-        max_len = ta.value;
-    }
-    if (ta.value != prev) {
-        // console.log(`onresult: Resetting ta to "${ta.value}"`);
-        // prev = ta.value;
-    }
-
-    ta.scrollTop = ta.scrollHeight;
-
+    current_segment.raw = '';
     for (var i = event.resultIndex; i < event.results.length; ++i) {
+        current_segment.raw += event.results[i][0].transcript;
+
         if (event.results[i].isFinal) {
-            chunks.push(event.results[i][0].transcript);
-            raw_buffer += event.results[i][0].transcript;
-            // massage_transcript(raw_buffer, ta.value.length);
-            massage_transcript(ta.value);
-        } else {
-            ta.value += event.results[i][0].transcript;
-            ta.scrollTop = ta.scrollHeight;
+            // console.log('** got final');
+            processed_segment.pending += current_segment.raw;
+            current_segment.raw = '';
+            massage_transcript();
         }
+    }
+}
+
+async function massage_transcript() {
+    try {
+        const response = await fetch(MASSAGE_TRANSCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(processed_segment.raw + processed_segment.pending)
+        });
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.fixed != null) {
+            processed_segment.processed = data.fixed;
+            processed_segment.raw += processed_segment.pending;
+            processed_segment.pending = '';
+        } else {
+            throw new Error('No response in data');
+        }
+    } catch (error) {
+        console.error('Error:', error);
     }
 }
 
@@ -445,62 +466,7 @@ recog.onerror = function (event) {
 };
 
 recog.onend = function (event) {
-    let msg = '********* Ended!';
-    const ta = document.querySelector('#case-notes-input')
-    // ta.value = chunks.join(' ') + ' ';
-    if (ta.value < max_len) {
-        debugger;
-    } else {
-        max_len = ta.value;
-    }
-    console.log(`* ta.value=${ta.value}`);
-    ta.scrollTop = ta.scrollHeight;
-
     if (micOn) {
-        msg += ' restarting...';
         recog.start();
-    } else {
-        ta.value = massaged_buffer;
-    }
-    console.log(msg);
-}
-
-async function massage_transcript(text) {
-    try {
-        const response = await fetch(MASSAGE_TRANSCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(text)
-        });
-
-        if (!response.ok) {
-            console.error('Response not OK:', response.status, response.statusText);
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const ta = document.querySelector('#case-notes-input')
-
-        if (data.fixed != null) {
-            massaged_buffer = data.fixed;
-            console.log(`massaged text: "${data.fixed}"`);
-            if (massaged_buffer.substring(-1) != ' ') {
-                massaged_buffer += ' ';
-            }
-            const current_text = raw_buffer;
-            const new_text = massaged_buffer + current_text.substring(text.length + 1);
-            console.log(`Replacing ta[0..${text.length + 1}]: "${massaged_buffer}" + "${current_text.substring(text.length + 1)}"`);
-            ta.value = new_text;
-            raw_buffer = new_text;
-        } else {
-            throw new Error('No response in data');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    } finally {
-
     }
 }
