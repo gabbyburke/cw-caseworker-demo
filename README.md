@@ -33,8 +33,8 @@ Under `appserver/` is a Cloud Run-hosted web app that serves the UI and hosts ba
 - [X] Add animation for reloading cases
 - [X] Add a Gemini animation next to "Save Note" while autosummarizing.
 - [X] Fix warning on enter key in chat space
-- [ ] Audio transcription?
-- [ ] Figure out scrolling of AI window
+- [X] Audio transcription!
+- [X] Figure out scrolling of AI window
 - [ ] ~~Add a table for cases, join to case_notes.  Add case_id, primary_caregiver, children (as string, total hack), case_type, risk_level, summary~~
 - [ ] ~~Write up BQ creating and seeding.~~
 - [ ] ~~Build out Pub/Sub connecting BQ writes to API.~~
