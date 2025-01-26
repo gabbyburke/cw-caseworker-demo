@@ -1,32 +1,32 @@
 [
-{
-"Case ID": "67196",
-"Visit ID": "1",
-"Visit Date": "2023-04-15",
-"Case Note": "Initial visit with Marjorie Callahan and her daughters Lila (8), Carrie (10), and Sylvia (14) following a referral for child neglect. The family is currently residing in a temporary shelter after losing their apartment due to eviction. Marjorie reports struggling to find stable housing and employment. The children appear adequately clothed and nourished. Discussed resources for housing assistance and job training programs. Scheduled a follow-up visit in two weeks to assess progress and address any immediate needs."
-},
-{
-"Case ID": "67196",
-"Visit ID": "2",
-"Visit Date": "2023-04-29",
-"Case Note": "Follow-up visit with Marjorie Callahan and her daughters. The family remains in the temporary shelter. Marjorie has applied for several jobs and is awaiting responses. She has also connected with a housing assistance program and is on a waiting list for affordable housing. The children are attending school regularly and report feeling safe at the shelter. Provided information on additional resources for food and clothing assistance. Will continue to monitor the family's progress and provide support as needed."
-},
-{
-"Case ID": "67196",
-"Visit ID": "3",
-"Visit Date": "2023-05-13",
-"Case Note": "Home visit with Marjorie Callahan and her daughters. The family has transitioned from the temporary shelter to a motel. Marjorie has secured part-time employment at a local grocery store. The children continue to attend school regularly and report feeling supported by their teachers and peers. Observed positive interactions between Marjorie and her daughters. Discussed the importance of maintaining stable housing and employment for the well-being of the children. Will continue to monitor the family's progress and provide support as needed."
-},
-{
-"Case ID": "67196",
-"Visit ID": "4",
-"Visit Date": "2023-05-27",
-"Case Note": "Home visit with Marjorie Callahan and her daughters. The family remains in the motel. Marjorie has increased her hours at the grocery store and is actively searching for full-time employment. The children are enrolled in summer programs and report enjoying their activities. Observed continued positive interactions between Marjorie and her daughters. Discussed the possibility of exploring alternative housing options, such as subsidized apartments or transitional housing programs. Will continue to monitor the family's progress and provide support as needed."
-},
-{
-"Case ID": "67196",
-"Visit ID": "5",
-"Visit Date": "2023-06-10",
-"Case Note": "Home visit with Marjorie Callahan and her daughters. The family has secured affordable housing in a subsidized apartment complex. Marjorie has obtained full-time employment at a local retail store. The children are excited about their new home and are looking forward to the start of the school year. Observed continued positive interactions between Marjorie and her daughters. Commending Marjorie for her hard work and dedication to her children. Will continue to monitor the family's progress and provide support as needed."
-}
+    {
+        "Case ID": "67196",
+        "Visit ID": "1",
+        "Visit Date": "2024-04-15",
+        "Case Note": "Initial visit with Marjorie Callahan and her daughters Lila (8), Carrie (10), and Sylvia (14) following a referral for child neglect. The family is currently residing in a temporary shelter after losing their apartment due to eviction. Marjorie reports struggling to find stable housing and employment. The children appear adequately clothed and nourished. Discussed resources for housing assistance and job training programs. Scheduled a follow-up visit in two weeks to assess progress and address any immediate needs."
+    },
+    {
+        "Case ID": "67196",
+        "Visit ID": "2",
+        "Visit Date": "2024-04-29",
+        "Case Note": "Follow-up visit with Marjorie Callahan and her daughters. The family remains in the temporary shelter. Marjorie has applied for several jobs and is awaiting responses. She has also connected with a housing assistance program and is on a waiting list for affordable housing. The children are attending school regularly and report feeling safe at the shelter. Provided information on additional resources for food and clothing assistance. Will continue to monitor the family's progress and provide support as needed."
+    },
+    {
+        "Case ID": "67196",
+        "Visit ID": "3",
+        "Visit Date": "2024-05-13",
+        "Case Note": "Home visit with Marjorie Callahan and her daughters. The family has transitioned from the temporary shelter to a motel. Marjorie has secured part-time employment at a local grocery store. The children continue to attend school regularly and report feeling supported by their teachers and peers. Observed positive interactions between Marjorie and her daughters. Discussed the importance of maintaining stable housing and employment for the well-being of the children. Will continue to monitor the family's progress and provide support as needed."
+    },
+    {
+        "Case ID": "67196",
+        "Visit ID": "4",
+        "Visit Date": "2024-05-27",
+        "Case Note": "Home visit with Marjorie Callahan and her daughters. The family remains in the motel. Marjorie has increased her hours at the grocery store and is actively searching for full-time employment. The children are enrolled in summer programs and report enjoying their activities. Observed continued positive interactions between Marjorie and her daughters. Discussed the possibility of exploring alternative housing options, such as subsidized apartments or transitional housing programs. Will continue to monitor the family's progress and provide support as needed."
+    },
+    {
+        "Case ID": "67196",
+        "Visit ID": "5",
+        "Visit Date": "2024-06-10",
+        "Case Note": "Home visit with Marjorie Callahan and her daughters. The family has secured affordable housing in a subsidized apartment complex. Marjorie has obtained full-time employment at a local retail store. The children are excited about their new home and are looking forward to the start of the school year. Observed continued positive interactions between Marjorie and her daughters. Commending Marjorie for her hard work and dedication to her children. Will continue to monitor the family's progress and provide support as needed."
+    }
 ]
