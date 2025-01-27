@@ -9,7 +9,6 @@ const CASENOTES_URL = '/casenotes/';
 const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
 const MASSAGE_TRANSCRIPT_URL = '/massage_transcript';
 
-// let currentCaseId = 67196;
 let currentCaseId = 24601;
 let currentNoteType = 'note';
 let currentVisitId = -1;
