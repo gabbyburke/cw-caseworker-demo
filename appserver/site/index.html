@@ -208,8 +208,10 @@
 
                 <form class="chat-form js-chat-form" id="chat-form">
                     <label for="ai-input" class="visually-hidden">Ask AI Assistant</label>
-                    <input type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
-                        autocomplete="off" required>
+                    <!-- <input type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
+                        autocomplete="off" required> -->
+                    <textarea type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
+                        autocomplete="off" required></textarea>
                     <button type="submit" onclick="javascript:handleChatBotQuery();" class="chat-form__submit"
                         id="chat-submit" aria-label="Send message">
                         <i class="material-icons">send</i>
