@@ -9,7 +9,7 @@
 * stephenriley@
 
 # Brief summary
-This app demonstrates Gemini functionality for case workers in a child welfare context. It is configured for Firebase and includes 4 Cloud Run Functions that need to be deployed (or use the URLs provided). All 4 functions and their associated requirements are written in Python 11 and stored in /functions. The app itself is in /public.
+This app demonstrates Gemini functionality for case workers in a child welfare context. It is configured for Firebase and includes 4 Cloud Run Functions that need to be deployed (or use the URLs provided). All 4 functions and their associated requirements are written in Python 3.11 and stored in /functions. The app itself is in /public.
 
 # Deployment
 1. **Deploy Cloud Run Functions** Using /functions, deploy individually. Generate a new Gemini API Key and store the key as a variable called GOOGLE_API_KEY when deploying the function.
