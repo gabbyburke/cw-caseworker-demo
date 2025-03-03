@@ -1,144 +1,519 @@
-from firebase_functions import https_fn, options
-from firebase_admin import initialize_app
-from flask import Flask, request, Response, jsonify, redirect
-from geminisupport import generate_response, summarize, fix_transcript
-from google.cloud import bigquery
-import json
-import os
-import time
+// DOM Elements
+const chatWindow = document.querySelector('.js-chat-window');
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('ai-input');
+const submitButton = document.getElementById('chat-submit');
 
-initialize_app()
+// API Endpoints - ensure they don't end with a slash
+const CASENOTES_URL = 'https://casenotes-api-807576987550.us-central1.run.app';
+const CHATBOT_URL = 'https://cw-chatbot-function-807576987550.us-central1.run.app';
+const AUTO_SUMMARIZE_URL = 'https://cw-summarize-function-807576987550.us-central1.run.app';
+const MASSAGE_TRANSCRIPT_URL = 'https://cw-massage-transcript-807576987550.us-central1.run.app';
 
-UNIQUE_CASE_NOTES_QUERY = """
-    select
-        agg.table.*
-    from (
-        select
-            case_id, visit_id,
-            ARRAY_AGG(STRUCT(table)
-            order by
-            version desc)[SAFE_OFFSET(0)] agg
-        from
-            `gb-demos.cw_case_notes.cw_case_notes` table
-        where case_id={}
-        group by
-            case_id, visit_id
-    )
-    order by visit_id desc
-"""
+let currentCaseId = 24601;
+let currentNoteType = 'note';
+let currentVisitId = -1;
+let micOn = false;
 
-bq = bigquery.Client()
+// Debug function to check elements
+function debugElements() {
+    console.log('Debugging elements:');
+    console.log('chatWindow:', chatWindow);
+    console.log('chatForm:', chatForm);
+    console.log('chatInput:', chatInput);
+    console.log('submitButton:', submitButton);
+}
 
-app = Flask(__name__)
+(async () => {
+    await handleLoadCaseNotes(currentCaseId);
+    newNote();
+    $('#reload-case-notes').on('click', async function () {
+        await handleLoadCaseNotes(currentCaseId);
+    });
 
-@https_fn.on_request(
-    cors=options.CorsOptions(
-        cors_origins=["*"],
-        cors_methods=["GET", "POST", "OPTIONS"]
-    )
-)
-def caseworker_api(req: https_fn.Request) -> https_fn.Response:
-    # Handle CORS preflight requests
-    if req.method == 'OPTIONS':
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'Access-Control-Max-Age': '3600'
+    $('#case-notes-input').on('keydown', async function (event) {
+        if (event.key == 'Enter' && event.metaKey) {
+            event.preventDefault();
+            await handleSaveNotes(event);
         }
-        return https_fn.Response('', status=204, headers=headers)
+    });
+
+    $('#case-notes-input').on('keyup', async function (event) {
+        $('#char-count').text($('#case-notes-input').val().length);
+    });
+
+    $('#mic-button').on('click', () => {
+        micOn = !micOn;
+        if (micOn) {
+            $('#mic-button').addClass('button--primary');
+            $('#textarea-region').css('display', 'none');
+            $('#transcription-region').css('display', 'block');
+            recog.start();
+        } else {
+            $('#mic-button').removeClass('button--primary');
+            $('#textarea-region').css('display', 'block');
+            $('#transcription-region').css('display', 'none');
+            $('#case-notes-input').scrollTop($('#case-notes-input').prop('scrollHeight'));
+            recog.stop();
+        }
+    });
+
+    $('body').on('keydown', async function (event) {
+        if (event.key == ' ' && event.ctrlKey) {
+            $('#mic-button').trigger('click');
+        }
+    });
+
+    $('#risk-level').on('click', () => {
+        $('#risk-level').text('Low').removeClass('risk-level--medium').addClass('risk-level--low').addClass('size-pulse');;
+    });
+})();
+
+// load case notes
+async function handleLoadCaseNotes(case_id) {
+    const new_node = $('#reload-case-notes').clone(true, true);
+    $('#reload-case-notes').replaceWith(new_node);
+
+    try {
+        console.log('Fetching case notes from:', `${CASENOTES_URL}/${case_id}`);
+        const response = await fetch(`${CASENOTES_URL}/${case_id}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (data) {
+            $('#previous-notes-list').empty();
+
+            for (let row of data) {
+                if (row.genai_summary == 'null') {
+                    row.genai_summary = null;
+                }
+                let summary = '<b>AI Summary:</b> ' + row.genai_summary;
+                if (!row.genai_summary) {
+                    summary = row.note ? row.note : '';
+                }
+
+                summary = summary.replace('(AI Assistant generated)', '<b>(AI Assistant generated)</b>');
+
+                const element_id = `previous-notes-item-${row.visit_id}`;
+                const type_header = row.note_type == 'genai'
+                    ? ': AI Assistant Note'
+                    : row.note.startsWith('Phone call transcription:')
+                        ? "Phone Call"
+                        : "Visit";
+                const element = $(`
+                    <li id="${element_id}" class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">${row.visit_date} - ${type_header}</span>
+                            <span class="previous-notes__preview">${summary}</span>
+                        </a>
+                    </li>
+                `);
+
+                $(element).data('note', row);
+                $(element).on('click', function () {
+                    const data = $(this).data('note');
+                    currentVisitId = data.visit_id;
+                    currentNoteType = data.note_type;
+                    $('#case-notes-input').val(data.note).trigger('focus');
+                });
+                $('#previous-notes-list').append(element);
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        $('#previous-notes-list').empty();
+    }
+}
+
+// Handle form submission
+async function handleChatBotQuery(event) {
+    if (event) {
+        event.preventDefault();
+    }
     
-    # Set CORS headers for the main request
-    headers = {
-        'Access-Control-Allow-Origin': '*'
+    if (!CHATBOT_URL) {
+        displayMessage('bot', 'The AI chat functionality is currently unavailable.');
+        return;
     }
 
-    # Handle /gemini endpoint
-    if req.path.endswith('/gemini'):
-        if req.method == 'POST':
-            data = req.get_json()
-            message = data.get('message')
-            if not message:
-                return https_fn.Response('Missing message parameter', status=400, headers=headers)
-            response = generate_response(message)
-            return https_fn.Response(json.dumps({'response': response}), mimetype='application/json', headers=headers)
-    
-    # Handle /casenotes endpoint
-    elif '/casenotes/' in req.path:
-        path_parts = req.path.split('/')
-        if len(path_parts) < 3:
-            return https_fn.Response('Invalid path', status=400, headers=headers)
-        
-        case_id = path_parts[2]
-        
-        if req.method == 'GET':
-            query = UNIQUE_CASE_NOTES_QUERY.format(case_id)
-            query_job = bq.query(query)
-            results = query_job.result()
-            
-            rows = []
-            for row in results:
-                rows.append(row.agg)
-                
-            return https_fn.Response(json.dumps(rows), mimetype='application/json', headers=headers)
-            
-        elif req.method == 'POST':
-            data = req.get_json()
-            if not data:
-                return https_fn.Response('Missing request body', status=400, headers=headers)
-                
-            # Insert into BigQuery
-            table_id = 'gb-demos.cw_case_notes.cw_case_notes'
-            errors = bq.insert_rows_json(table_id, [data])
-            
-            if errors:
-                return https_fn.Response(f'Error inserting rows: {errors}', status=500, headers=headers)
-            return https_fn.Response(json.dumps({'status': 'success'}), mimetype='application/json', headers=headers)
-    
-    # Handle /genai_auto_summarize endpoint
-    elif '/genai_auto_summarize/' in req.path:
-        path_parts = req.path.split('/')
-        if len(path_parts) < 4:
-            return https_fn.Response('Invalid path', status=400, headers=headers)
-            
-        case_id = path_parts[2]
-        visit_id = path_parts[3]
-        
-        # Get the note from BigQuery
-        query = f"""
-            SELECT note FROM `gb-demos.cw_case_notes.cw_case_notes`
-            WHERE case_id = {case_id} AND visit_id = {visit_id}
-            ORDER BY version DESC LIMIT 1
-        """
-        query_job = bq.query(query)
-        results = query_job.result()
-        rows = list(results)
-        
-        if not rows:
-            return https_fn.Response('Note not found', status=404, headers=headers)
-            
-        note = rows[0].note
-        summary = summarize(note)
-        
-        # Update the note with the summary
-        update_query = f"""
-            UPDATE `gb-demos.cw_case_notes.cw_case_notes`
-            SET genai_summary = '{summary}'
-            WHERE case_id = {case_id} AND visit_id = {visit_id}
-        """
-        update_job = bq.query(update_query)
-        update_job.result()
-        
-        return https_fn.Response(json.dumps({'summary': summary}), mimetype='application/json', headers=headers)
-    
-    # Handle /massage_transcript endpoint
-    elif req.path.endswith('/massage_transcript'):
-        if req.method == 'POST':
-            data = req.get_json()
-            if not isinstance(data, str):
-                return https_fn.Response('Invalid request body', status=400, headers=headers)
-                
-            fixed = fix_transcript(data)
-            return https_fn.Response(json.dumps({'fixed': fixed}), mimetype='application/json', headers=headers)
-    
-    return https_fn.Response('Not found', status=404, headers=headers)
+    console.log('Submit button clicked');
+    console.log('Form:', chatForm);
+    console.log('Chat input element:', chatInput);
+
+    console.log('Chat input element value at submit:', chatInput.value);
+    const message = chatInput.value;
+    console.log('Raw message:', message);
+
+    const trimmedMessage = message.trim();
+    console.log('Trimmed message:', trimmedMessage);
+
+    $('.ai-mentor').animate({
+        scrollTop: $('.ai-mentor').prop('scrollHeight'),
+    }, 500);
+
+    if (trimmedMessage) {
+        // Display user message
+        displayMessage('user', trimmedMessage);
+        chatInput.value = '';
+
+        let full_prompt = gatherNotes().join("\n") + `\nUSER: ${trimmedMessage}`;
+
+        // Show loading state
+        const loadingMessage = document.createElement('div');
+        loadingMessage.classList.add('chat-message', 'chat-message--loading');
+        loadingMessage.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+        chatWindow.appendChild(loadingMessage);
+
+        try {
+            console.log('Calling cloud function at:', CHATBOT_URL);
+            // Call cloud function
+            const response = await fetch(CHATBOT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ message: full_prompt })
+            });
+
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                console.error('Response not OK:', response.status, response.statusText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (data.response) {
+                displayMessage('bot', data.response);
+            } else {
+                throw new Error('No response in data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            displayMessage('bot', 'I apologize, but I encountered an error. Please try again.');
+        } finally {
+            loadingMessage.remove();
+            $('.ai-mentor').animate({
+                scrollTop: $('.ai-mentor').prop('scrollHeight'),
+            }, 500);
+        }
+    } else {
+        console.log('Empty message, not sending');
+    }
+}
+
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded - Setting up event listeners');
+    debugElements();
+
+    if (!chatWindow || !chatForm || !chatInput || !submitButton) {
+        console.error('Required elements not found');
+        return;
+    }
+
+    // Display welcome message
+    displayMessage('bot', "Hello! I'm your AI assistant for case management. How can I help you today?", 'first-time');
+
+    // Form submit event
+    chatForm.addEventListener('submit', handleChatBotQuery);
+
+    $('#new-notes').on('click', (event) => {
+        event.preventDefault();
+        newNote();
+        reset_recog();
+    });
+
+    $('#new-transcription').on('click', (event) => {
+        event.preventDefault();
+        newNote("Phone call transcription:\n\n");
+    });
+
+    $('#save-case-notes').on('click', async (event) => await handleSaveNotes(event));
+
+    // Enter key event
+    chatInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            console.log('Enter key pressed');
+            handleChatBotQuery();
+        }
+    });
+
+    console.log('Event listeners set up complete');
+});
+
+let messageCounter = 1;
+
+function displayMessage(sender, text, first) {
+    console.log('Displaying message:', { sender, text });
+    const icon = sender == 'bot' && first == undefined ? `<br/><i id='copy-over-${messageCounter}' class='material-icons copy-over virtual-button'>swap_horiz</i>` : '';
+    const messageElement = $(`
+        <div class="chat-message chat-message--${sender}">
+            <span>${text}</span>${icon}
+        </div>
+    `);
+    $('.js-chat-window').append(messageElement);
+    $(`#copy-over-${messageCounter}`).on('click', function (el) {
+        newNote();
+        const content = trimPoliteTrailingQuestion($(this).parent().children('span').text());
+        $('#case-notes-input').val('(AI Assistant generated) ' + content);
+        currentNoteType = 'genai';
+    });
+    messageCounter++;
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function newNote(header) {
+    $('#case-notes-input').val(header || '').trigger('focus');
+
+    const case_notes = $('.previous-notes__item').map(function () { return $(this).data('note') }).get();
+    currentVisitId = case_notes.length > 0 ? Math.max(...case_notes.map(n => n.visit_id)) + 1 : 1;
+    currentNoteType = 'note';
+}
+
+function gatherNotes() {
+    const notes = [];
+    $('.previous-notes__item').each((idx, el) => {
+        const data = $(el).data('note');
+        notes.push(`NOTE: ${data.note} (recorded ${data.visit_date})`);
+    });
+    return notes;
+}
+
+function trimPoliteTrailingQuestion(s) {
+    if (s.slice(-1) != '?') {
+        return s;
+    }
+
+    const period_position = s.lastIndexOf('.');
+    const trimmed = s.substring(0, period_position + 1);
+    return trimmed;
+}
+
+async function summarizeCaseNotes(case_id, visit_id) {
+    if (!AUTO_SUMMARIZE_URL) {
+        console.log('Auto-summarize functionality is currently unavailable');
+        return;
+    }
+
+    $('#save-gemini-logo-holder').empty();
+    $('#save-gemini-logo-holder').append($(`<img id="save-gemini-logo" class="gemini-logo pulse" src="gemini.png" />`));
+
+    try {
+        const url = `${AUTO_SUMMARIZE_URL}/${case_id}/${visit_id}`;
+        console.log('Calling cloud function at:', url);
+        // Call cloud function
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Response data:', data);
+
+        if (!data) {
+            throw new Error('No response in data');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function handleSaveNotes(event) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    const text = $('#case-notes-input').val();
+    if (text == '') {
+        return;
+    }
+
+    const visit_date = new Date().toISOString().substring(0, 10);
+
+    try {
+        const response = await fetch(`${CASENOTES_URL}/${currentCaseId}/${currentVisitId || -1}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const last_case_id = currentCaseId;
+        const last_visit_id = currentVisitId;
+        newNote();
+        await handleLoadCaseNotes(currentCaseId);
+        setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
+    } catch (error) {
+        console.error('Error saving notes:', error);
+    }
+}
+
+let timeout;
+let previousValue = "";
+
+$('#case-notes-input').on("input", () => {
+    if (!micOn) {
+        previousValue = $('#case-notes-input').val();
+        return;
+    }
+
+    if (timeout) {
+        console.log('Clearing timeout due to change');
+        clearTimeout(timeout);
+    }
+
+    previousValue = $('#case-notes-input').val();
+
+    console.log('Creating new timeout');
+    timeout = setTimeout(() => {
+        if ($('#case-notes-input').val() !== previousValue) {
+            console.log("Textarea has changed.");
+            console.log(`previous: "${previousValue}"`);
+            console.log(`current:  "${$('#case-notes-input').val()}"`);
+            previousValue = $('#case-notes-input').val();
+        } else {
+            console.log("Textarea has not changed in 2 seconds.");
+        }
+    }, 2000);
+});
+
+const recog = new webkitSpeechRecognition();
+recog.continuous = true;
+recog.interimResults = true;
+
+function new_segment() { return { raw: '', pending: '', processed: null } };
+
+function reset_recog() {
+    processed_segment = new_segment();
+    current_segment = new_segment();
+}
+
+let processed_segment, current_segment;
+
+reset_recog();
+
+let prev = '';
+let render_interval = setInterval(() => {
+    if (micOn) {
+        let processed_text = (processed_segment.processed != null ? processed_segment.processed : '');
+        let contents = processed_text
+            + processed_segment.pending
+            + current_segment.raw;
+        if (contents == prev) { return; }
+        // console.log(`rendering "${contents}"`);
+        $('#case-notes-input').val(contents).scrollTop($('#case-notes-input').prop('scrollHeight'));
+        prev = contents;
+        $('#processed-text').text(processed_text);
+        $('#pending-text').text(processed_segment.pending);
+        $('#raw-text').text(current_segment.raw);
+        $('#transcription-holder').scrollTop($('#transcription-holder').prop('scrollHeight'));
+    }
+}, 300);
+
+recog.onresult = function (event) {
+    current_segment.raw = '';
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+        current_segment.raw += event.results[i][0].transcript;
+
+        if (event.results[i].isFinal) {
+            // console.log('** got final');
+            processed_segment.pending += current_segment.raw;
+            current_segment.raw = '';
+            massage_transcript();
+        }
+    }
+}
+
+async function massage_transcript() {
+    if (!MASSAGE_TRANSCRIPT_URL) {
+        console.log('Transcript processing is currently unavailable');
+        return;
+    }
+
+    try {
+        $('#transcribe-gemini-logo-holder').empty();
+        $('#transcribe-gemini-logo-holder').append($(`<img id="transcribe-gemini-logo" class="gemini-logo pulse" src="gemini.png" />`));
+        const response = await fetch(MASSAGE_TRANSCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(processed_segment.raw + processed_segment.pending)
+        });
+
+        if (!response.ok) {
+            console.error('Response not OK:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.fixed != null) {
+            processed_segment.processed = data.fixed;
+            processed_segment.raw += processed_segment.pending;
+            processed_segment.pending = '';
+        } else {
+            throw new Error('No response in data');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+recog.onerror = function (event) {
+    if (event.error == 'no-speech') {
+        console.log('info_no_speech');
+    }
+    if (event.error == 'audio-capture') {
+        console.log('info_no_microphone');
+    }
+    if (event.error == 'not-allowed') {
+        if (event.timeStamp - start_timestamp < 100) {
+            console.log('info_blocked');
+        } else {
+            console.log('info_denied');
+        }
+    }
+};
+
+recog.onend = function (event) {
+    if (micOn) {
+        recog.start();
+    }
+}
