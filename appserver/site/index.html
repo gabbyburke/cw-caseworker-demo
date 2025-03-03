@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Child Welfare Management System">
+    <title>Child Welfare Case Management</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script src="js/jquery.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Header Area -->
+    <header class="header">
+        <div class="header__logo">
+            <img src="img/cw_logo.png" alt="Child Welfare Logo" width="40" height="40">
+        </div>
+        <div class="header__search">
+            <form role="search" class="search-form">
+                <label for="global-search" class="visually-hidden">Search cases</label>
+                <input type="search" id="global-search" class="search-form__input js-search-input"
+                    placeholder="Search cases..." autocomplete="off">
+                <i class="material-icons search-form__icon inline-icon">search</i>
+            </form>
+        </div>
+    </header>
+
+    <!-- Main App Container -->
+    <div class="app-container">
+        <!-- Left Navigation -->
+        <nav class="sidebar-nav" role="navigation">
+            <ul class="nav-list">
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link nav-list__link--active" aria-label="Dashboard">
+                        <i class="material-icons">dashboard</i>
+                    </a>
+                </li>
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link" aria-label="Cases">
+                        <i class="material-icons">folder</i>
+                    </a>
+                </li>
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link" aria-label="New Case">
+                        <i class="material-icons">add_circle</i>
+                    </a>
+                </li>
+                <li class="nav-list__item">
+                    <a href="#" class="nav-list__link" aria-label="Reports">
+                        <i class="material-icons">assessment</i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="case-container" role="main">
+            <!-- Case Summary Section -->
+            <section class="case-summary">
+                <header class="case-summary__header">
+                    <h1 class="case-summary__title">Case #CW-24601</h1>
+                    <div class="case-summary__status">Active</div>
+                </header>
+
+                <div class="case-summary__content">
+                    <div class="family-info card">
+                        <h2 class="card__title">
+                            <i class="material-icons">family_restroom</i>
+                            Family Information
+                        </h2>
+                        <div class="family-info__list">
+                            <table>
+                                <tr>
+                                    <td><b>Primary Caregivers:</b></td>
+                                    <td>Sofia Smith, Louis Smith</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Children:</b></td>
+                                    <td>Isabella Smith (8), Michael Smith (6)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Case Type:</b></td>
+                                    <td>Neglect</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="risk-assessment card">
+                        <h2 class="card__title">
+                            <i class="material-icons">warning</i>
+                            Risk Assessment
+                        </h2>
+                        <p class="risk-assessment__level">
+                            <b>Current Risk Level:</b> <span id='risk-level'
+                                class="risk-level risk-level--medium">Medium</span>
+                        </p>
+                        <p class="risk-assessment__details">
+                            Last assessment conducted on 2024-10-03. Scheduled for re-evaluation in 30 days.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Case Notes Section -->
+            <section class="case-notes">
+                <h2 class="case-notes__title">
+                    <span>
+                        <i class="material-icons">note</i>
+                        Case Notes
+                    </span>
+                    <span style="order:2;margin-left:auto">
+                        <span id="transcribe-gemini-logo-holder">
+                            <img id="transcribe-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                        </span>
+                        <button id="mic-button" type="button" class="button js-voice-input"
+                            aria-label="Start voice input">
+                            <i style="margin-right:0px !important" class="material-icons">mic</i>
+                        </button>
+                    </span>
+                </h2>
+                <form class="notes-form js-notes-form">
+                    <div id="textarea-region">
+                        <label for="case-notes-input" class="visually-hidden">Enter case notes</label>
+                        <textarea id="case-notes-input" class="notes-form__input js-notes-input"
+                            placeholder="Enter case notes..." rows="6" aria-live="polite"></textarea>
+                    </div>
+                    <div id="transcription-region">
+                        <div id='transcription-holder' class="notes-form__input">
+                            <div class="visually-hidden"></div>
+                            <span id="processed-text"></span>
+                            <span id="pending-text"></span>
+                            <span id="raw-text"></span>
+                        </div>
+                    </div>
+                    <div class="notes-form__controls">
+                        <span class="notes-form__count js-character-count"><span id='char-count'>0</span>
+                            characters</span>
+                        <button id="new-notes" type="submit" class="button button--primary">
+                            <i class="inline-icon material-icons" style="font-size:15px">add</i><span> New Notes</span>
+                        </button>
+                        <button id="new-transcription" type="submit" class="button button--primary">
+                            <i class="inline-icon material-icons" style="font-size:15px">phone</i><span> New Phone
+                                Call</span>
+                        </button>
+                        <div class="save-button-div">
+                            <span id='save-gemini-logo-holder'>
+                                <img id="save-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                            </span>
+                            <button id="save-case-notes" type="submit" class="button button--primary">
+                                <i class="inline-icon material-icons" style="font-size:15px">save</i> Save Notes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Previous Case Notes Section -->
+            <section class="previous-notes">
+                <h2 class="previous-notes__title">
+                    <i id='reload-case-notes' class="material-icons virtual-button rotating"
+                        style="cursor:pointer">history</i>
+                    Previous Case Notes
+                </h2>
+                <ul id='previous-notes-list' class="previous-notes__list">
+                    <li id="fake-1" class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">&nbsp;</span>
+                            <span class="previous-notes__preview">&nbsp;</span>
+                        </a>
+                    </li>
+                    <li id="fake-2" class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">&nbsp;</span>
+                            <span class="previous-notes__preview">&nbsp;</span>
+                        </a>
+                    </li>
+                    <li id="fake-3" class="previous-notes__item">
+                        <a href="#" class="previous-notes__link">
+                            <span class="previous-notes__date">&nbsp;</span>
+                            <span class="previous-notes__preview">&nbsp;</span>
+                        </a>
+                    </li>
+                </ul>
+            </section>
+        </main>
+
+        <!-- AI Mentor Sidebar -->
+        <aside class="ai-mentor" role="complementary">
+            <header class="ai-mentor__header">
+                <h2 class="ai-mentor__title">
+                    <img class="gemini-logo" src="img/gemini.png"><span>AI Assistant</span>
+                </h2>
+                <!-- <button class="ai-mentor__toggle js-mentor-toggle" aria-label="Toggle AI Assistant"
+                    aria-expanded="true">
+                    <i class="material-icons">chevron_right</i>
+                </button> -->
+            </header>
+
+            <div class="ai-mentor__content js-mentor-content">
+                <div class="chat-window js-chat-window">
+                    <!-- Chat messages will be dynamically inserted here -->
+                </div>
+
+                <form class="chat-form js-chat-form" id="chat-form">
+                    <label for="ai-input" class="visually-hidden">Ask AI Assistant</label>
+                    <!-- <input type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
+                        autocomplete="off" required> -->
+                    <textarea type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
+                        autocomplete="off" required></textarea>
+                    <button type="submit" onclick="javascript:handleChatBotQuery();" class="chat-form__submit"
+                        id="chat-submit" aria-label="Send message">
+                        <i class="material-icons">send</i>
+                    </button>
+                </form>
+            </div>
+        </aside>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+
+</html>
