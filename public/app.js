@@ -1,8 +1,15 @@
 // DOM Elements
 const chatWindow = document.querySelector('.js-chat-window');
-const chatForm = document.getElementById('chat-form');
-const chatInput = document.getElementById('ai-input');
-const submitButton = document.getElementById('chat-submit');
+const chatForm = document.querySelector('#chat-form');
+const chatInput = document.querySelector('#ai-input');
+const submitButton = document.querySelector('#chat-submit');
+
+// Debug initial state
+console.log('Initial DOM elements:');
+console.log('Chat window:', chatWindow);
+console.log('Chat form:', chatForm);
+console.log('Chat input:', chatInput);
+console.log('Submit button:', submitButton);
 
 // API Endpoints - ensure they don't end with a slash
 const CASENOTES_URL = 'https://casenotes-api-807576987550.us-central1.run.app';
@@ -170,7 +177,8 @@ async function handleChatBotQuery(event) {
         displayMessage('user', trimmedMessage);
         chatInput.value = '';
 
-        let full_prompt = gatherNotes().join("\n") + `\nUSER: ${trimmedMessage}`;
+        // Get case notes and history
+        const history = gatherNotes();
 
         // Show loading state
         const loadingMessage = document.createElement('div');
@@ -180,6 +188,9 @@ async function handleChatBotQuery(event) {
 
         try {
             console.log('Calling cloud function at:', CHATBOT_URL);
+            console.log('History:', history);
+            console.log('Message:', trimmedMessage);
+            
             // Call cloud function
             const response = await fetch(CHATBOT_URL, {
                 method: 'POST',
@@ -187,7 +198,10 @@ async function handleChatBotQuery(event) {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ message: full_prompt })
+                body: JSON.stringify({
+                    message: trimmedMessage,
+                    history: history
+                })
             });
 
             console.log('Response status:', response.status);
@@ -229,11 +243,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Make AI Assistant visible
+    $('.ai-assistant').addClass('is-visible');
+
     // Display welcome message
     displayMessage('bot', "Hello! I'm your AI assistant for case management. How can I help you today?", 'first-time');
 
-    // Form submit event
-    chatForm.addEventListener('submit', handleChatBotQuery);
+    // Form submit event using jQuery
+    $('#chat-form').on('submit', function(event) {
+        event.preventDefault();
+        console.log('Form submitted');
+        const message = $('#ai-input').val();
+        console.log('Message:', message);
+        if (message && message.trim()) {
+            handleChatBotQuery();
+        } else {
+            console.log('Empty message, not submitting');
+        }
+    });
 
     $('#new-notes').on('click', (event) => {
         event.preventDefault();
@@ -248,11 +275,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#save-case-notes').on('click', async (event) => await handleSaveNotes(event));
 
-    // Enter key event
-    chatInput.addEventListener('keydown', function (event) {
+    // Enter key event using jQuery
+    $(chatInput).on('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
             console.log('Enter key pressed');
+            const message = $(this).val();
+            console.log('Message:', message);
             handleChatBotQuery();
         }
     });
@@ -291,10 +320,22 @@ function newNote(header) {
 
 function gatherNotes() {
     const notes = [];
+    
+    // Add case information first
+    notes.push({
+        sender: 'user',
+        message: `Case Information: Family with primary caregivers Sofia Smith and Louis Smith. Children: Isabella Smith (8) and Michael Smith (6). Case type: Neglect. Current risk level: Medium. Last assessment conducted on 2024-10-03.`
+    });
+    
+    // Add case notes
     $('.previous-notes__item').each((idx, el) => {
         const data = $(el).data('note');
-        notes.push(`NOTE: ${data.note} (recorded ${data.visit_date})`);
+        notes.push({
+            sender: 'user',
+            message: `Case Note (${data.visit_date}): ${data.note}`
+        });
     });
+    
     return notes;
 }
 
