@@ -9,15 +9,15 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script src="js/jquery.js"></script>
-    <link rel="stylesheet" href="css/styles.css">
+    <script src="jquery.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <!-- Header Area -->
     <header class="header">
         <div class="header__logo">
-            <img src="img/cw_logo.png" alt="Child Welfare Logo" width="40" height="40">
+            <img src="../logo.png" alt="Child Welfare Logo" width="40" height="40">
         </div>
         <div class="header__search">
             <form role="search" class="search-form">
@@ -76,11 +76,11 @@
                             <table>
                                 <tr>
                                     <td><b>Primary Caregivers:</b></td>
-                                    <td>Sofia Smith, Louis Smith</td>
+                                    <td>Jamie Thompson</td>
                                 </tr>
                                 <tr>
                                     <td><b>Children:</b></td>
-                                    <td>Isabella Smith (8), Michael Smith (6)</td>
+                                    <td>Alex Thompson (6)</td>
                                 </tr>
                                 <tr>
                                     <td><b>Case Type:</b></td>
@@ -100,7 +100,7 @@
                                 class="risk-level risk-level--medium">Medium</span>
                         </p>
                         <p class="risk-assessment__details">
-                            Last assessment conducted on 2024-10-03. Scheduled for re-evaluation in 30 days.
+                            Last assessment conducted on 2025-03-01. Scheduled for re-evaluation in 30 days.
                         </p>
                     </div>
                 </div>
@@ -115,7 +115,7 @@
                     </span>
                     <span style="order:2;margin-left:auto">
                         <span id="transcribe-gemini-logo-holder">
-                            <img id="transcribe-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                            <img id="transcribe-gemini-logo" class="gemini-logo" src="../gemini.png" />
                         </span>
                         <button id="mic-button" type="button" class="button js-voice-input"
                             aria-label="Start voice input">
@@ -149,7 +149,7 @@
                         </button>
                         <div class="save-button-div">
                             <span id='save-gemini-logo-holder'>
-                                <img id="save-gemini-logo" class="gemini-logo" src="img/gemini.png" />
+                                <img id="save-gemini-logo" class="gemini-logo" src="../gemini.png" />
                             </span>
                             <button id="save-case-notes" type="submit" class="button button--primary">
                                 <i class="inline-icon material-icons" style="font-size:15px">save</i> Save Notes
@@ -193,7 +193,7 @@
         <aside class="ai-mentor" role="complementary">
             <header class="ai-mentor__header">
                 <h2 class="ai-mentor__title">
-                    <img class="gemini-logo" src="img/gemini.png"><span>AI Assistant</span>
+                    <img class="gemini-logo" src="../gemini.png"><span>AI Assistant</span>
                 </h2>
                 <!-- <button class="ai-mentor__toggle js-mentor-toggle" aria-label="Toggle AI Assistant"
                     aria-expanded="true">
@@ -206,14 +206,11 @@
                     <!-- Chat messages will be dynamically inserted here -->
                 </div>
 
-                <form class="chat-form js-chat-form" id="chat-form">
+                <form id="chat-form" class="chat-form js-chat-form">
                     <label for="ai-input" class="visually-hidden">Ask AI Assistant</label>
-                    <!-- <input type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
-                        autocomplete="off" required> -->
-                    <textarea type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
-                        autocomplete="off" required></textarea>
-                    <button type="submit" onclick="javascript:handleChatBotQuery();" class="chat-form__submit"
-                        id="chat-submit" aria-label="Send message">
+                    <input type="text" id="ai-input" class="chat-form__input" placeholder="Ask a question..."
+                        autocomplete="off" required>
+                    <button type="submit" class="chat-form__submit" id="chat-submit" aria-label="Send message">
                         <i class="material-icons">send</i>
                     </button>
                 </form>
@@ -221,7 +218,7 @@
         </aside>
     </div>
 
-    <script src="js/app.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>

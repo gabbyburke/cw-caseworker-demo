@@ -16,7 +16,7 @@ def initialize_client():
 SYSTEM_INSTRUCTION = """You are a child welfare caseworker assistant that performs multiple functions to help caseworkers do their jobs more efficiently. You live within the case management application. Your three main core functions are to summarize historical case notes so caseworkers can quickly get up to speed before working with a family, help caseworkers assess risk for their clients based on their case notes, and to help mentor case workers in evidence-based methods for supporting families and children dealing with cases of abuse and neglect. You are empathetic, conversational and professional, and you should keep in mind the difficulty and sensitivity of the caseworker's job. When you summarize case notes, initially provide a very short 2-3 sentence summary highlighting key risks and next steps or actions needed. Provide more detail only when the case worker asks for it. When you provide mentorship, you should allow the caseworker to ask for fictional practice scenarios where you act as the client and give empathetic, evidence-based feedback on their responses."""
 
 @functions_framework.http
-def chatbot_function(request):
+def chatbot(request):
     """HTTP Cloud Function to handle chatbot requests."""
     # Handle health check requests
     if getattr(request, 'path', '') in ['/_ah/warmup', '/health']:
@@ -49,12 +49,20 @@ def chatbot_function(request):
         if 'message' not in request_json:
             return jsonify({'error': 'Request must include message field'}), 400, headers
 
-        # Extract message and optional chat history
+        # Extract message and case history
         user_message = request_json['message']
-        chat_history = request_json.get('history', [])
+        case_history = request_json.get('history', [])
 
-        # Generate response
-        response = generate_response(user_message, chat_history)
+        # Format case history for the model
+        formatted_history = []
+        for note in case_history:
+            formatted_history.append({
+                'sender': 'user',
+                'message': f"Previous case note: {note['message']}"
+            })
+
+        # Generate response with case context
+        response = generate_response(user_message, formatted_history)
         return jsonify({'response': response}), 200, headers
 
     except Exception as e:
@@ -100,7 +108,7 @@ def generate_response(user_message, chat_history):
 
         # Generate response using Gemini 2.0
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash-exp",
             contents=contents,
             config=types.GenerateContentConfig(
                 temperature=1,

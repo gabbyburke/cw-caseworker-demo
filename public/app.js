@@ -1,13 +1,21 @@
 // DOM Elements
 const chatWindow = document.querySelector('.js-chat-window');
-const chatForm = document.getElementById('chat-form');
-const chatInput = document.getElementById('ai-input');
-const submitButton = document.getElementById('chat-submit');
+const chatForm = document.querySelector('#chat-form');
+const chatInput = document.querySelector('#ai-input');
+const submitButton = document.querySelector('#chat-submit');
 
-const CHATBOT_URL = '/gemini';
-const CASENOTES_URL = '/casenotes/';
-const AUTO_SUMMARIZE_URL = '/genai_auto_summarize';
-const MASSAGE_TRANSCRIPT_URL = '/massage_transcript';
+// Debug initial state
+console.log('Initial DOM elements:');
+console.log('Chat window:', chatWindow);
+console.log('Chat form:', chatForm);
+console.log('Chat input:', chatInput);
+console.log('Submit button:', submitButton);
+
+// API Endpoints - ensure they don't end with a slash
+const CASENOTES_URL = 'https://casenotes-api-807576987550.us-central1.run.app';
+const CHATBOT_URL = 'https://cw-chatbot-function-807576987550.us-central1.run.app';
+const AUTO_SUMMARIZE_URL = 'https://cw-summarize-function-807576987550.us-central1.run.app';
+const MASSAGE_TRANSCRIPT_URL = 'https://cw-massage-transcript-807576987550.us-central1.run.app';
 
 let currentCaseId = 24601;
 let currentNoteType = 'note';
@@ -74,10 +82,12 @@ async function handleLoadCaseNotes(case_id) {
     $('#reload-case-notes').replaceWith(new_node);
 
     try {
-        const response = await fetch(CASENOTES_URL + case_id, {
+        console.log('Fetching case notes from:', `${CASENOTES_URL}/${case_id}`);
+        const response = await fetch(`${CASENOTES_URL}/${case_id}`, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
 
@@ -129,18 +139,25 @@ async function handleLoadCaseNotes(case_id) {
                 });
                 $('#previous-notes-list').append(element);
             }
-        } else {
-            throw new Error('No response in data');
         }
     } catch (error) {
         console.error('Error:', error);
+        $('#previous-notes-list').empty();
     }
 }
 
 // Handle form submission
 async function handleChatBotQuery(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    
+    if (!CHATBOT_URL) {
+        displayMessage('bot', 'The AI chat functionality is currently unavailable.');
+        return;
+    }
+
     console.log('Submit button clicked');
-    console.log('Form submitted');
     console.log('Form:', chatForm);
     console.log('Chat input element:', chatInput);
 
@@ -160,7 +177,8 @@ async function handleChatBotQuery(event) {
         displayMessage('user', trimmedMessage);
         chatInput.value = '';
 
-        let full_prompt = gatherNotes().join("\n") + `\nUSER: ${trimmedMessage}`;
+        // Get case notes and history
+        const history = gatherNotes();
 
         // Show loading state
         const loadingMessage = document.createElement('div');
@@ -170,6 +188,9 @@ async function handleChatBotQuery(event) {
 
         try {
             console.log('Calling cloud function at:', CHATBOT_URL);
+            console.log('History:', history);
+            console.log('Message:', trimmedMessage);
+            
             // Call cloud function
             const response = await fetch(CHATBOT_URL, {
                 method: 'POST',
@@ -177,7 +198,10 @@ async function handleChatBotQuery(event) {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ message: full_prompt })
+                body: JSON.stringify({
+                    message: trimmedMessage,
+                    history: history
+                })
             });
 
             console.log('Response status:', response.status);
@@ -207,7 +231,7 @@ async function handleChatBotQuery(event) {
     } else {
         console.log('Empty message, not sending');
     }
-};
+}
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -219,14 +243,24 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Make AI Assistant visible
+    $('.ai-assistant').addClass('is-visible');
+
     // Display welcome message
     displayMessage('bot', "Hello! I'm your AI assistant for case management. How can I help you today?", 'first-time');
 
-    // Form submit event
-    chatForm.onsubmit = function (event) {
-        console.log('Form submit triggered');
-        handleChatBotQuery(event);
-    };
+    // Form submit event using jQuery
+    $('#chat-form').on('submit', function(event) {
+        event.preventDefault();
+        console.log('Form submitted');
+        const message = $('#ai-input').val();
+        console.log('Message:', message);
+        if (message && message.trim()) {
+            handleChatBotQuery();
+        } else {
+            console.log('Empty message, not submitting');
+        }
+    });
 
     $('#new-notes').on('click', (event) => {
         event.preventDefault();
@@ -241,14 +275,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#save-case-notes').on('click', async (event) => await handleSaveNotes(event));
 
-    // Enter key event
-    chatInput.onkeydown = function (event) {
+    // Enter key event using jQuery
+    $(chatInput).on('keydown', function(event) {
         if (event.key === 'Enter') {
             event.preventDefault();
             console.log('Enter key pressed');
-            handleChatBotQuery(event);
+            const message = $(this).val();
+            console.log('Message:', message);
+            handleChatBotQuery();
         }
-    };
+    });
 
     console.log('Event listeners set up complete');
 });
@@ -277,17 +313,29 @@ function displayMessage(sender, text, first) {
 function newNote(header) {
     $('#case-notes-input').val(header || '').trigger('focus');
 
-    const case_notes = $('.previous-notes__item').map(function () { return $(this).data('note') });
-    currentVisitId = Math.max(...case_notes.map((_, n) => n.visit_id)) + 1;
+    const case_notes = $('.previous-notes__item').map(function () { return $(this).data('note') }).get();
+    currentVisitId = case_notes.length > 0 ? Math.max(...case_notes.map(n => n.visit_id)) + 1 : 1;
     currentNoteType = 'note';
 }
 
 function gatherNotes() {
     const notes = [];
+    
+    // Add case information first
+    notes.push({
+        sender: 'user',
+        message: `Case Information: Family with primary caregivers Sofia Smith and Louis Smith. Children: Isabella Smith (8) and Michael Smith (6). Case type: Neglect. Current risk level: Medium. Last assessment conducted on 2024-10-03.`
+    });
+    
+    // Add case notes
     $('.previous-notes__item').each((idx, el) => {
         const data = $(el).data('note');
-        notes.push(`NOTE: ${data.note} (recorded ${data.visit_date})`);
+        notes.push({
+            sender: 'user',
+            message: `Case Note (${data.visit_date}): ${data.note}`
+        });
     });
+    
     return notes;
 }
 
@@ -302,8 +350,13 @@ function trimPoliteTrailingQuestion(s) {
 }
 
 async function summarizeCaseNotes(case_id, visit_id) {
+    if (!AUTO_SUMMARIZE_URL) {
+        console.log('Auto-summarize functionality is currently unavailable');
+        return;
+    }
+
     $('#save-gemini-logo-holder').empty();
-    $('#save-gemini-logo-holder').append($(`<img id="save-gemini-logo" class="gemini-logo pulse" src="img/gemini.png" />`));
+    $('#save-gemini-logo-holder').append($(`<img id="save-gemini-logo" class="gemini-logo pulse" src="gemini.png" />`));
 
     try {
         const url = `${AUTO_SUMMARIZE_URL}/${case_id}/${visit_id}`;
@@ -312,7 +365,8 @@ async function summarizeCaseNotes(case_id, visit_id) {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
 
@@ -346,20 +400,28 @@ async function handleSaveNotes(event) {
 
     const visit_date = new Date().toISOString().substring(0, 10);
 
-    const response = await fetch(`${CASENOTES_URL}${currentCaseId}/${currentVisitId || -1}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
-    });
+    try {
+        const response = await fetch(`${CASENOTES_URL}/${currentCaseId}/${currentVisitId || -1}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ case_id: currentCaseId, visit_id: currentVisitId, note: text, note_type: currentNoteType, visit_date: visit_date, genai_summary: null })
+        });
 
-    const last_case_id = currentCaseId;
-    const last_visit_id = currentVisitId;
-    newNote();
-    handleLoadCaseNotes(currentCaseId);
-    setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const last_case_id = currentCaseId;
+        const last_visit_id = currentVisitId;
+        newNote();
+        await handleLoadCaseNotes(currentCaseId);
+        setTimeout(() => { summarizeCaseNotes(last_case_id, last_visit_id); }, 1500);
+    } catch (error) {
+        console.error('Error saving notes:', error);
+    }
 }
 
 let timeout;
@@ -439,10 +501,14 @@ recog.onresult = function (event) {
 }
 
 async function massage_transcript() {
+    if (!MASSAGE_TRANSCRIPT_URL) {
+        console.log('Transcript processing is currently unavailable');
+        return;
+    }
+
     try {
-        // $('#transcribe-gemini-logo').replaceWith($('#transcribe-gemini-logo').clone(true, true));
         $('#transcribe-gemini-logo-holder').empty();
-        $('#transcribe-gemini-logo-holder').append($(`<img id="transcribe-gemini-logo" class="gemini-logo pulse" src="img/gemini.png" />`));
+        $('#transcribe-gemini-logo-holder').append($(`<img id="transcribe-gemini-logo" class="gemini-logo pulse" src="gemini.png" />`));
         const response = await fetch(MASSAGE_TRANSCRIPT_URL, {
             method: 'POST',
             headers: {

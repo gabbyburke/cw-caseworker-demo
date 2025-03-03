@@ -723,9 +723,8 @@ body {
     flex: 1;
     padding: var(--spacing-sm);
     border: 1px solid var(--color-border);
-    /* border-radius: 10; */
-    border-radius: var(--border-radius-md);
-    font-size: var(--font-size-small);
+    border-radius: var(--border-radius-full);
+    font-size: var(--font-size-base);
     letter-spacing: var(--letter-spacing-base);
     transition: all var(--transition-base);
     background-color: var(--color-surface);
@@ -976,7 +975,7 @@ body {
 }
 
 .size-pulse {
-    animation: sizePulse 3s;
+    animation: sizePulse 1.5s;
 }
 
 @keyframes sizePulse {
