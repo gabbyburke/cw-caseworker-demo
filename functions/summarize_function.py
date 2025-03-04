@@ -1,17 +1,18 @@
 import functions_framework
 from flask import Request, jsonify
-import google.generativeai as genai
+import json
+from google import genai
+from google.genai import types
 from google.cloud import bigquery
 import os
 
-# Configure Gemini API
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-if not GOOGLE_API_KEY:
-    raise ValueError("GOOGLE_API_KEY environment variable is required")
-
-genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
-
+# Configure Vertex AI
+def initialize_client():
+    return genai.Client(
+        vertexai=True,
+        project="gb-demos",
+        location="us-central1"
+    )
 # Initialize BigQuery client
 bq = bigquery.Client()
 
