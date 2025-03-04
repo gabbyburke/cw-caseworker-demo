@@ -1,4 +1,6 @@
 functions-framework==3.*
 flask==3.*
-google-generativeai==0.8.*
 google-cloud-bigquery==3.*
+google-genai==0.*
+vertexai==0.*
+google-cloud-aiplatform=1.*
